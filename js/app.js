@@ -569,11 +569,17 @@ async function updateDashboard() {
         );
     }
 }
+// ========================================
+// ЗАПУСК ГЛАВНОЙ СТРАНИЦЫ
+// ========================================
 
+document.addEventListener("DOMContentLoaded", function () {
 
-// Запускаем статистику
+    if (document.getElementById("students-count")) {
+        updateDashboard();
+    }
 
-updateDashboard();
+});
 // ========================================
 // СТРАНИЦА СТУДЕНТОВ
 // ========================================
