@@ -1145,29 +1145,43 @@ if (studentWorksList) {
 
 
         // ========================================
-        // ОПЛАЧЕНО
-        // ========================================
-        // Пока платежи берём из localStorage.
-        // На следующем этапе перенесём их
-        // полностью в Supabase.
+// ОПЛАЧЕНО
+// ========================================
 
         let paidMoney = 0;
 
 
-        const localPayments =
-            getPayments().filter(
-                payment =>
-                    payment.student === student.name
+// Получаем оплаты этого студента из Supabase
+
+        const { data: payments, error: paymentsError } =
+            await db
+                .from("payments")
+                .select("amount")
+                .eq("student_id", student.id);
+
+
+// Проверяем ошибку
+
+        if (paymentsError) {
+
+            console.error(
+                "Ошибка загрузки оплат:",
+                paymentsError
             );
 
+        } else {
 
-        localPayments.forEach(function(payment) {
+            payments.forEach(function(payment) {
 
-            paidMoney +=
-                Number(payment.amount) || 0;
+                paidMoney +=
+                    Number(payment.amount) || 0;
 
-        });
+            });
 
+        }
+
+
+// Показываем оплаченную сумму
 
         document.getElementById(
             "student-paid-money"
