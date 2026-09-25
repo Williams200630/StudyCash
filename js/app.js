@@ -3,7 +3,15 @@
 // Основная логика приложения
 // ========================================
 
+const SUPABASE_URL = "https://hftlrygmnrmofnmkvhjb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Co87zTDbT4HQ5NndAh1gCw_0pGM0bW-";
 
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+console.log("Supabase подключён");
 // Стоимость одного часа
 const HOURLY_RATE = 500;
 
