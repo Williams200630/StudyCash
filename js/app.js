@@ -1866,3 +1866,392 @@ if (paymentButton) {
     );
 
 }
+// ========================================
+// СТРАНИЦА КОНКРЕТНОГО СТУДЕНТА
+// ========================================
+
+const studentWorksList =
+    document.getElementById("student-works-list");
+
+
+if (studentWorksList) {
+
+    async function renderStudentPage() {
+
+        // Получаем имя студента из адреса
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const studentName =
+            params.get("name");
+
+
+        // Если имя не передано
+
+        if (!studentName) {
+
+            console.error(
+                "Не указано имя студента"
+            );
+
+            return;
+        }
+
+
+        // ========================================
+        // ПОЛУЧАЕМ СТУДЕНТА
+        // ========================================
+
+        const {
+            data: students,
+            error: studentError
+        } = await db
+            .from("students")
+            .select("*")
+            .eq("name", studentName)
+            .limit(1);
+
+
+        if (studentError) {
+
+            console.error(
+                "Ошибка загрузки студента:",
+                studentError
+            );
+
+            return;
+        }
+
+
+        if (!students || students.length === 0) {
+
+            console.error(
+                "Студент не найден:",
+                studentName
+            );
+
+            return;
+        }
+
+
+        const student =
+            students[0];
+
+
+        // ========================================
+        // ПОЛУЧАЕМ РАБОТЫ СТУДЕНТА
+        // ========================================
+
+        const {
+            data: works,
+            error: worksError
+        } = await db
+            .from("works")
+            .select("*")
+            .eq("student_id", student.id)
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
+
+
+        if (worksError) {
+
+            console.error(
+                "Ошибка загрузки работ:",
+                worksError
+            );
+
+            return;
+        }
+
+
+        // ========================================
+        // ЗАГОЛОВОК
+        // ========================================
+
+        const titleElement =
+            document.getElementById(
+                "student-title"
+            );
+
+
+        if (titleElement) {
+
+            titleElement.textContent =
+                student.name;
+
+        }
+
+
+        const subtitleElement =
+            document.getElementById(
+                "student-subtitle"
+            );
+
+
+        if (subtitleElement) {
+
+            subtitleElement.textContent =
+                "Информация о выполненных работах и оплате";
+
+        }
+
+
+        // ========================================
+        // КОЛИЧЕСТВО РАБОТ
+        // ========================================
+
+        const worksCountElement =
+            document.getElementById(
+                "student-works-count"
+            );
+
+
+        if (worksCountElement) {
+
+            worksCountElement.textContent =
+                works.length;
+
+        }
+
+
+        // ========================================
+        // ОБЩЕЕ ВРЕМЯ
+        // ========================================
+
+        let totalMinutes = 0;
+
+
+        works.forEach(
+            function (work) {
+
+                totalMinutes +=
+                    Number(
+                        work.total_minutes
+                    ) || 0;
+
+            }
+        );
+
+
+        const totalHours =
+            Math.floor(
+                totalMinutes / 60
+            );
+
+
+        const remainingMinutes =
+            totalMinutes % 60;
+
+
+        const totalTimeElement =
+            document.getElementById(
+                "student-total-time"
+            );
+
+
+        if (totalTimeElement) {
+
+            totalTimeElement.textContent =
+                `${totalHours} ч ${remainingMinutes} мин`;
+
+        }
+
+
+        // ========================================
+        // ОБЩАЯ СУММА
+        // ========================================
+
+        let totalMoney = 0;
+
+
+        works.forEach(
+            function (work) {
+
+                totalMoney +=
+                    Number(
+                        work.price
+                    ) || 0;
+
+            }
+        );
+
+
+        const totalMoneyElement =
+            document.getElementById(
+                "student-total-money"
+            );
+
+
+        if (totalMoneyElement) {
+
+            totalMoneyElement.textContent =
+                formatMoney(totalMoney);
+
+        }
+
+
+        // ========================================
+        // ОПЛАЧЕНО
+        // ========================================
+
+        let paidMoney = 0;
+
+
+        const {
+            data: payments,
+            error: paymentsError
+        } = await db
+            .from("payments")
+            .select("amount")
+            .eq(
+                "student_id",
+                student.id
+            );
+
+
+        if (paymentsError) {
+
+            console.error(
+                "Ошибка загрузки оплат:",
+                paymentsError
+            );
+
+        } else {
+
+            payments.forEach(
+                function (payment) {
+
+                    paidMoney +=
+                        Number(
+                            payment.amount
+                        ) || 0;
+
+                }
+            );
+
+        }
+
+
+        const paidMoneyElement =
+            document.getElementById(
+                "student-paid-money"
+            );
+
+
+        if (paidMoneyElement) {
+
+            paidMoneyElement.textContent =
+                formatMoney(paidMoney);
+
+        }
+
+
+        // ========================================
+        // ДОЛГ
+        // ========================================
+
+        const debt =
+            totalMoney - paidMoney;
+
+
+        const debtElement =
+            document.getElementById(
+                "student-debt-money"
+            );
+
+
+        if (debtElement) {
+
+            debtElement.textContent =
+                formatMoney(debt);
+
+        }
+
+
+        // ========================================
+        // СПИСОК РАБОТ
+        // ========================================
+
+        studentWorksList.innerHTML = "";
+
+
+        if (!works || works.length === 0) {
+
+            studentWorksList.innerHTML = `
+                <div class="no-students">
+                    <h3>Работ пока нет</h3>
+                    <p>
+                        Для этого студента ещё нет выполненных работ.
+                    </p>
+                </div>
+            `;
+
+        } else {
+
+            works.forEach(
+                function (work) {
+
+                    const workCard =
+                        document.createElement("div");
+
+
+                    workCard.className =
+                        "work-card";
+
+
+                    workCard.innerHTML = `
+
+                        <div class="work-card-header">
+
+                            <strong>
+                                ${work.workType || work.work_type}
+                                №${work.workNumber || work.work_number}
+                            </strong>
+
+                            <span>
+                                ${formatMoney(work.price)}
+                            </span>
+
+                        </div>
+
+                        <div class="work-card-info">
+
+                            <span>
+                                ${work.subject}
+                            </span>
+
+                            <span>
+                                ${work.hours} ч ${work.minutes} мин
+                            </span>
+
+                        </div>
+
+                    `;
+
+
+                    studentWorksList.appendChild(
+                        workCard
+                    );
+
+                }
+            );
+
+        }
+
+    }
+
+
+    // ========================================
+    // ПЕРВЫЙ ЗАПУСК
+    // ========================================
+
+    renderStudentPage();
+
+}
