@@ -409,19 +409,20 @@ async function updateDashboard() {
 
     try {
 
-        // Получаем студентов из Supabase
+        // ========================================
+        // ПОЛУЧАЕМ ДАННЫЕ ИЗ SUPABASE
+        // ========================================
+
         const { data: students, error: studentsError } =
             await db
                 .from("students")
-                .select("id, name")
-                .order("name");
+                .select("id, name");
 
         if (studentsError) {
             throw studentsError;
         }
 
 
-        // Получаем все работы
         const { data: works, error: worksError } =
             await db
                 .from("works")
@@ -432,7 +433,6 @@ async function updateDashboard() {
         }
 
 
-        // Получаем все платежи
         const { data: payments, error: paymentsError } =
             await db
                 .from("payments")
@@ -443,25 +443,26 @@ async function updateDashboard() {
         }
 
 
-        // Если студентов нет
-        if (!students || students.length === 0) {
-            console.log("Студентов пока нет");
-            return;
-        }
+        // ========================================
+        // ОБЩАЯ СТАТИСТИКА
+        // ========================================
+
+        const studentsCount =
+            students ? students.length : 0;
+
+        const worksCount =
+            works ? works.length : 0;
 
 
-        // Считаем общую статистику
-        let totalWorks = 0;
         let totalMinutes = 0;
         let totalMoney = 0;
-        let totalPaid = 0;
+        let paidMoney = 0;
 
 
+        // Считаем работы
         if (works) {
 
             works.forEach(function(work) {
-
-                totalWorks += 1;
 
                 totalMinutes +=
                     Number(work.total_minutes || 0);
@@ -472,41 +473,55 @@ async function updateDashboard() {
         }
 
 
+        // Считаем оплаты
         if (payments) {
 
             payments.forEach(function(payment) {
 
-                totalPaid +=
+                paidMoney +=
                     Number(payment.amount || 0);
             });
         }
 
 
-        const totalDebt =
-            totalMoney - totalPaid;
+        const debtMoney =
+            totalMoney - paidMoney;
 
 
-        // Находим элементы главной страницы
+        // ========================================
+        // ВЫВОДИМ ДАННЫЕ НА ГЛАВНУЮ
+        // ========================================
+
+        const studentsElement =
+            document.getElementById("students-count");
+
         const worksElement =
-            document.getElementById("totalWorks");
+            document.getElementById("works-count");
 
         const timeElement =
-            document.getElementById("totalTime");
+            document.getElementById("total-time");
 
         const moneyElement =
-            document.getElementById("totalMoney");
+            document.getElementById("total-money");
 
         const paidElement =
-            document.getElementById("totalPaid");
+            document.getElementById("paid-money");
 
         const debtElement =
-            document.getElementById("totalDebt");
+            document.getElementById("debt-money");
 
 
-        // Выводим статистику
+        if (studentsElement) {
+
+            studentsElement.textContent =
+                studentsCount;
+        }
+
+
         if (worksElement) {
+
             worksElement.textContent =
-                totalWorks;
+                worksCount;
         }
 
 
@@ -518,16 +533,8 @@ async function updateDashboard() {
             const minutes =
                 totalMinutes % 60;
 
-            if (hours > 0) {
-
-                timeElement.textContent =
-                    `${hours} ч ${minutes} мин`;
-
-            } else {
-
-                timeElement.textContent =
-                    `${minutes} мин`;
-            }
+            timeElement.textContent =
+                `${hours} ч ${minutes} мин`;
         }
 
 
@@ -541,122 +548,23 @@ async function updateDashboard() {
         if (paidElement) {
 
             paidElement.textContent =
-                `${totalPaid.toFixed(2)} ₽`;
+                `${paidMoney.toFixed(2)} ₽`;
         }
 
 
         if (debtElement) {
 
             debtElement.textContent =
-                `${totalDebt.toFixed(2)} ₽`;
+                `${debtMoney.toFixed(2)} ₽`;
         }
 
 
-        // ========================================
-        // СПИСОК СТУДЕНТОВ НА ГЛАВНОЙ
-        // ========================================
-
-        const studentsContainer =
-            document.getElementById("studentsList");
-
-        if (!studentsContainer) {
-            return;
-        }
-
-
-        studentsContainer.innerHTML = "";
-
-
-        students.forEach(function(student) {
-
-            const studentWorks =
-                works.filter(function(work) {
-
-                    return work.student_id === student.id;
-                });
-
-
-            let studentMoney = 0;
-            let studentMinutes = 0;
-
-
-            studentWorks.forEach(function(work) {
-
-                studentMoney +=
-                    Number(work.price || 0);
-
-                studentMinutes +=
-                    Number(work.total_minutes || 0);
-            });
-
-
-            const studentPayments =
-                payments.filter(function(payment) {
-
-                    return payment.student_id === student.id;
-                });
-
-
-            let studentPaid = 0;
-
-
-            studentPayments.forEach(function(payment) {
-
-                studentPaid +=
-                    Number(payment.amount || 0);
-            });
-
-
-            const studentDebt =
-                studentMoney - studentPaid;
-
-
-            const studentElement =
-                document.createElement("div");
-
-            studentElement.className =
-                "student-card";
-
-
-            studentElement.innerHTML = `
-                <div class="student-card-name">
-                    ${student.name}
-                </div>
-
-                <div class="student-card-info">
-                    Работ: ${studentWorks.length}
-                </div>
-
-                <div class="student-card-info">
-                    Время: ${Math.floor(studentMinutes / 60)} ч ${studentMinutes % 60} мин
-                </div>
-
-                <div class="student-card-money">
-                    Долг: ${studentDebt.toFixed(2)} ₽
-                </div>
-            `;
-
-
-            studentElement.addEventListener(
-                "click",
-                function() {
-
-                    window.location.href =
-                        `student.html?name=${encodeURIComponent(student.name)}`;
-                }
-            );
-
-
-            studentsContainer.appendChild(
-                studentElement
-            );
-        });
-
+        console.log("Главная страница загружена из Supabase");
 
     } catch (error) {
 
         console.error(
-            "Ошибка загрузки главной страницы:",
+            "Ошибка загрузки данных с Supabase:",
             error
         );
     }
