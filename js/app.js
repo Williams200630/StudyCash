@@ -807,88 +807,102 @@ if (studentsList) {
 
 
             // ========================================
-            // СОЗДАЁМ КАРТОЧКУ
-            // ========================================
+// СОЗДАЁМ КАРТОЧКУ
+// ========================================
 
             const card =
                 document.createElement("div");
 
-
             card.className =
                 "student-card";
-            const deleteButton =
-                document.createElement("button");
 
-            deleteButton.type = "button";
-            deleteButton.textContent = "🗑️ Архивировать";
+            card.innerHTML = `
 
-            deleteButton.style.marginTop = "12px";
-            deleteButton.style.padding = "8px 12px";
-            deleteButton.style.border = "none";
-            deleteButton.style.borderRadius = "8px";
-            deleteButton.style.cursor = "pointer";
+    <div class="student-card-header">
 
-            deleteButton.addEventListener("click", async function(event) {
+        <div class="student-avatar">
+            👤
+        </div>
 
-                event.stopPropagation();
+        <div>
 
-                // Проверяем, нет ли долга
-                if (debt > 0) {
-                    alert(
-                        `Нельзя архивировать студента «${student.name}».\n\n` +
-                        `За ним числится долг: ${formatMoney(debt)}`
-                    );
-                    return;
-                }
+            <div class="student-name">
+                ${student.name}
+            </div>
 
-                const confirmed =
-                    confirm(
-                        `Архивировать студента «${student.name}»?\n\n` +
-                        `Его старые работы и оплаты сохранятся в истории.`
-                    );
+        </div>
 
-                if (!confirmed) {
-                    return;
-                }
+    </div>
 
-                try {
+    <div class="student-info">
 
-                    const { error } =
-                        await db
-                            .from("students")
-                            .update({
-                                archived: true
-                            })
-                            .eq("id", student.id);
+        <div class="student-info-item">
 
-                    if (error) {
-                        throw error;
-                    }
+            <span>
+                Работ
+            </span>
 
-                    alert(
-                        `Студент «${student.name}» перемещён в архив.`
-                    );
+            <strong>
+                ${studentWorks.length}
+            </strong>
 
-                    renderStudents(
-                        searchInput ? searchInput.value : ""
-                    );
+        </div>
 
-                } catch (error) {
+        <div class="student-info-item">
 
-                    console.error(
-                        "Ошибка архивации студента:",
-                        error
-                    );
+            <span>
+                Общее время
+            </span>
 
-                    alert(
-                        "Не удалось архивировать студента.\n\n" +
-                        error.message
-                    );
-                }
-            });
+            <strong>
+                ${hours} ч ${minutes} мин
+            </strong>
 
-            card.appendChild(deleteButton);
+        </div>
 
+        <div class="student-info-item">
+
+            <span>
+                Начислено
+            </span>
+
+            <strong>
+                ${formatMoney(totalMoney)}
+            </strong>
+
+        </div>
+
+        <div class="student-info-item">
+
+            <span>
+                Оплачено
+            </span>
+
+            <strong>
+                ${formatMoney(paidMoney)}
+            </strong>
+
+        </div>
+
+    </div>
+
+    <div class="student-debt">
+
+        <span>
+            Осталось получить
+        </span>
+
+        <strong>
+            ${formatMoney(debt)}
+        </strong>
+
+    </div>
+
+`;
+
+// ========================================
+// ОТКРЫТИЕ СТРАНИЦЫ СТУДЕНТА
+// ========================================
 
             card.addEventListener(
                 "click",
@@ -900,97 +914,104 @@ if (studentsList) {
                 }
             );
 
+// ========================================
+// КНОПКА АРХИВАЦИИ
+// ========================================
 
-            card.innerHTML = `
+            const deleteButton =
+                document.createElement("button");
 
-            <div class="student-card-header">
+            deleteButton.type =
+                "button";
 
-                <div class="student-avatar">
-                    👤
-                </div>
+            deleteButton.textContent =
+                "🗑️ Архивировать";
 
-                <div>
+            deleteButton.style.marginTop =
+                "12px";
 
-                    <div class="student-name">
-                        ${student.name}
-                    </div>
+            deleteButton.style.padding =
+                "8px 12px";
 
-                </div>
+            deleteButton.style.border =
+                "none";
 
-            </div>
+            deleteButton.style.borderRadius =
+                "8px";
 
+            deleteButton.style.cursor =
+                "pointer";
 
-            <div class="student-info">
+            deleteButton.addEventListener(
+                "click",
+                async function (event) {
 
-                <div class="student-info-item">
+                    event.stopPropagation();
 
-                    <span>
-                        Работ
-                    </span>
+                    // Проверяем задолженность
+                    if (debt > 0) {
 
-                    <strong>
-                        ${studentWorks.length}
-                    </strong>
+                        alert(
+                            `Нельзя архивировать студента «${student.name}».\n\n` +
+                            `За ним числится долг: ${formatMoney(debt)}`
+                        );
 
-                </div>
+                        return;
+                    }
 
+                    const confirmed =
+                        confirm(
+                            `Архивировать студента «${student.name}»?\n\n` +
+                            `Его старые работы и оплаты сохранятся в истории.`
+                        );
 
-                <div class="student-info-item">
+                    if (!confirmed) {
+                        return;
+                    }
 
-                    <span>
-                        Общее время
-                    </span>
+                    try {
 
-                    <strong>
-                        ${hours} ч ${minutes} мин
-                    </strong>
+                        const { error } =
+                            await db
+                                .from("students")
+                                .update({
+                                    archived: true
+                                })
+                                .eq("id", student.id);
 
-                </div>
+                        if (error) {
+                            throw error;
+                        }
 
+                        alert(
+                            `Студент «${student.name}» перемещён в архив.`
+                        );
 
-                <div class="student-info-item">
+                        renderStudents(
+                            searchInput
+                                ? searchInput.value
+                                : ""
+                        );
 
-                    <span>
-                        Начислено
-                    </span>
+                    } catch (error) {
 
-                    <strong>
-                        ${formatMoney(totalMoney)}
-                    </strong>
+                        console.error(
+                            "Ошибка архивации студента:",
+                            error
+                        );
 
-                </div>
+                        alert(
+                            "Не удалось архивировать студента.\n\n" +
+                            error.message
+                        );
+                    }
+                }
+            );
 
+// Добавляем кнопку в карточку
+            card.appendChild(deleteButton);
 
-                <div class="student-info-item">
-
-                    <span>
-                        Оплачено
-                    </span>
-
-                    <strong>
-                        ${formatMoney(paidMoney)}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="student-debt">
-
-                <span>
-                    Осталось получить
-                </span>
-
-                <strong>
-                    ${formatMoney(debt)}
-                </strong>
-
-            </div>
-
-        `;
-
-
+// Добавляем карточку на страницу
             studentsList.appendChild(card);
 
         }
