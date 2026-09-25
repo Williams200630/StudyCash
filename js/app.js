@@ -900,22 +900,33 @@ const studentWorksList =
 
 if (studentWorksList) {
 
-    function renderStudentPage() {
+    async function renderStudentPage() {
 
         const params =
-            new URLSearchParams(window.location.search);
+            new URLSearchParams(
+                window.location.search
+            );
+
 
         const studentName =
             params.get("name");
 
 
+        // Если имя не указано
+
         if (!studentName) {
 
-            document.getElementById("student-title").textContent =
+            document.getElementById(
+                "student-title"
+            ).textContent =
                 "Студент не найден";
 
-            document.getElementById("student-subtitle").textContent =
+
+            document.getElementById(
+                "student-subtitle"
+            ).textContent =
                 "Не указано имя студента.";
+
 
             studentWorksList.innerHTML =
                 '<div class="no-works">Студент не найден.</div>';
@@ -924,42 +935,137 @@ if (studentWorksList) {
         }
 
 
-        const works =
-            getWorks().filter(
-                work => work.student === studentName
+        // ========================================
+        // ИЩЕМ СТУДЕНТА В SUPABASE
+        // ========================================
+
+        const { data: students, error: studentError } =
+            await db
+                .from("students")
+                .select("*")
+                .eq("name", studentName)
+                .limit(1);
+
+
+        if (studentError) {
+
+            console.error(
+                "Ошибка загрузки студента:",
+                studentError
             );
 
+            studentWorksList.innerHTML = `
+                <div class="no-works">
+                    Не удалось загрузить данные студента.
+                </div>
+            `;
 
-        /* Имя студента */
-
-        document.getElementById("student-title").textContent =
-            studentName;
+            return;
+        }
 
 
-        document.getElementById("student-subtitle").textContent =
+        if (!students || students.length === 0) {
+
+            document.getElementById(
+                "student-title"
+            ).textContent =
+                "Студент не найден";
+
+
+            document.getElementById(
+                "student-subtitle"
+            ).textContent =
+                "Такого студента нет в базе данных.";
+
+
+            studentWorksList.innerHTML =
+                '<div class="no-works">Студент не найден.</div>';
+
+            return;
+        }
+
+
+        const student =
+            students[0];
+
+
+        // ========================================
+        // ЗАГРУЖАЕМ РАБОТЫ СТУДЕНТА
+        // ========================================
+
+        const { data: works, error: worksError } =
+            await db
+                .from("works")
+                .select("*")
+                .eq("student_id", student.id)
+                .order("created_at", {
+                    ascending: false
+                });
+
+
+        if (worksError) {
+
+            console.error(
+                "Ошибка загрузки работ:",
+                worksError
+            );
+
+            studentWorksList.innerHTML = `
+                <div class="no-works">
+                    Не удалось загрузить работы студента.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        // ========================================
+        // ИМЯ СТУДЕНТА
+        // ========================================
+
+        document.getElementById(
+            "student-title"
+        ).textContent =
+            student.name;
+
+
+        document.getElementById(
+            "student-subtitle"
+        ).textContent =
             "Информация о выполненных работах и оплате";
 
 
-        /* Количество работ */
+        // ========================================
+        // КОЛИЧЕСТВО РАБОТ
+        // ========================================
 
         document.getElementById(
             "student-works-count"
-        ).textContent = works.length;
+        ).textContent =
+            works.length;
 
 
-        /* Общее время */
+        // ========================================
+        // ОБЩЕЕ ВРЕМЯ
+        // ========================================
 
         let totalMinutes = 0;
 
-        works.forEach(work => {
 
-            totalMinutes += work.totalMinutes;
+        works.forEach(function(work) {
+
+            totalMinutes +=
+                Number(work.total_minutes) || 0;
 
         });
 
 
         const totalHours =
-            Math.floor(totalMinutes / 60);
+            Math.floor(
+                totalMinutes / 60
+            );
+
 
         const remainingMinutes =
             totalMinutes % 60;
@@ -971,32 +1077,19 @@ if (studentWorksList) {
             `${totalHours} ч ${remainingMinutes} мин`;
 
 
-        /* Общая сумма */
+        // ========================================
+        // ОБЩАЯ СУММА
+        // ========================================
 
         let totalMoney = 0;
 
-        works.forEach(work => {
 
-            totalMoney += work.price;
+        works.forEach(function(work) {
 
-        });
-
-
-        /* Оплачено */
-
-        let paidMoney = 0;
-
-        works.forEach(work => {
-
-            paidMoney += work.paid || 0;
+            totalMoney +=
+                Number(work.price) || 0;
 
         });
-
-
-        /* Долг */
-
-        const debtMoney =
-            totalMoney - paidMoney;
 
 
         document.getElementById(
@@ -1005,10 +1098,43 @@ if (studentWorksList) {
             formatMoney(totalMoney);
 
 
+        // ========================================
+        // ОПЛАЧЕНО
+        // ========================================
+        // Пока платежи берём из localStorage.
+        // На следующем этапе перенесём их
+        // полностью в Supabase.
+
+        let paidMoney = 0;
+
+
+        const localPayments =
+            getPayments().filter(
+                payment =>
+                    payment.student === student.name
+            );
+
+
+        localPayments.forEach(function(payment) {
+
+            paidMoney +=
+                Number(payment.amount) || 0;
+
+        });
+
+
         document.getElementById(
             "student-paid-money"
         ).textContent =
             formatMoney(paidMoney);
+
+
+        // ========================================
+        // ДОЛГ
+        // ========================================
+
+        const debtMoney =
+            totalMoney - paidMoney;
 
 
         document.getElementById(
@@ -1017,7 +1143,9 @@ if (studentWorksList) {
             formatMoney(debtMoney);
 
 
-        /* Список работ */
+        // ========================================
+        // СПИСОК РАБОТ
+        // ========================================
 
         studentWorksList.innerHTML = "";
 
@@ -1034,19 +1162,27 @@ if (studentWorksList) {
         }
 
 
-        works.forEach(work => {
+        // ========================================
+        // СОЗДАЁМ КАРТОЧКИ РАБОТ
+        // ========================================
+
+        works.forEach(function(work) {
 
             const workItem =
                 document.createElement("div");
+
 
             workItem.className =
                 "work-item";
 
 
-            /* Левая часть */
+            // ------------------------------------
+            // Левая часть
+            // ------------------------------------
 
             const main =
                 document.createElement("div");
+
 
             main.className =
                 "work-item-main";
@@ -1055,16 +1191,18 @@ if (studentWorksList) {
             const title =
                 document.createElement("h3");
 
+
             title.className =
                 "work-item-title";
 
 
             title.textContent =
-                `${work.workType} №${work.workNumber}`;
+                `${work.work_type} №${work.work_number}`;
 
 
             const details =
                 document.createElement("div");
+
 
             details.className =
                 "work-item-details";
@@ -1073,12 +1211,14 @@ if (studentWorksList) {
             const subject =
                 document.createElement("span");
 
+
             subject.textContent =
                 `📚 ${work.subject}`;
 
 
             const time =
                 document.createElement("span");
+
 
             time.textContent =
                 `⏱ ${work.hours} ч ${work.minutes} мин`;
@@ -1094,10 +1234,13 @@ if (studentWorksList) {
             main.appendChild(details);
 
 
-            /* Правая часть */
+            // ------------------------------------
+            // Правая часть
+            // ------------------------------------
 
             const priceBlock =
                 document.createElement("div");
+
 
             priceBlock.className =
                 "work-item-price";
@@ -1106,128 +1249,14 @@ if (studentWorksList) {
             const price =
                 document.createElement("strong");
 
+
             price.textContent =
-                formatMoney(work.price);
-
-
-            const status =
-                document.createElement("span");
-
-            status.className =
-                "work-item-status";
-
-
-            const payButton =
-                document.createElement("button");
-
-            payButton.className =
-                "pay-button";
-
-
-            const paymentButton =
-                document.getElementById("add-payment-button");
-
-            const paymentInput =
-                document.getElementById("payment-amount");
-
-
-            if (paymentButton && paymentInput) {
-
-                paymentButton.onclick = function () {
-
-                    const amount =
-                        Number(paymentInput.value);
-
-
-                    if (!amount || amount <= 0) {
-
-                        alert("Введите сумму оплаты.");
-
-                        return;
-                    }
-
-
-                    const totalMoney =
-                        works.reduce(
-                            (sum, work) => sum + work.price,
-                            0
-                        );
-
-
-                    const currentPayments =
-                        getPayments()
-                            .filter(
-                                payment =>
-                                    payment.student === studentName
-                            );
-
-
-                    const currentPaid =
-                        currentPayments.reduce(
-                            (sum, payment) =>
-                                sum + payment.amount,
-                            0
-                        );
-
-
-                    const debt =
-                        totalMoney - currentPaid;
-
-
-                    if (amount > debt) {
-
-                        alert(
-                            `Нельзя внести больше долга.\n\n` +
-                            `Текущий долг: ${formatMoney(debt)}`
-                        );
-
-                        return;
-                    }
-
-
-                    const payments =
-                        getPayments();
-
-
-                    payments.push({
-
-                        id: Date.now(),
-
-                        student: studentName,
-
-                        amount: amount,
-
-                        date: new Date().toISOString()
-
-                    });
-
-
-                    savePayments(payments);
-
-
-                    paymentInput.value = "";
-
-
-                    renderStudentPage();
-
-
-                    updateDashboard();
-
-
-                    alert(
-                        `Оплата ${formatMoney(amount)} добавлена.`
-                    );
-
-                };
-
-            }
+                formatMoney(
+                    Number(work.price) || 0
+                );
 
 
             priceBlock.appendChild(price);
-
-            priceBlock.appendChild(status);
-
-            priceBlock.appendChild(payButton);
 
 
             workItem.appendChild(main);
@@ -1235,12 +1264,18 @@ if (studentWorksList) {
             workItem.appendChild(priceBlock);
 
 
-            studentWorksList.appendChild(workItem);
+            studentWorksList.appendChild(
+                workItem
+            );
 
         });
 
     }
 
+
+    // ========================================
+    // ЗАПУСК
+    // ========================================
 
     renderStudentPage();
 
