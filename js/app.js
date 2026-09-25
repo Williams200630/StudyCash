@@ -12,24 +12,72 @@ const db = window.supabase.createClient(
 );
 
 console.log("Supabase подключён");
-
-console.log("Начинаем проверку таблицы students...");
-
-async function testSupabase() {
-    console.log("Запрос отправлен");
-
-    const { data, error } = await db
-        .from("students")
-        .select("*");
-
-    console.log("Ответ Supabase:");
-    console.log("data =", data);
-    console.log("error =", error);
-}
-
-testSupabase();
 // Стоимость одного часа
 const HOURLY_RATE = 500;
+async function saveWorkToSupabase(work) {
+
+    // Ищем студента
+    let { data: students, error: studentError } =
+        await db
+            .from("students")
+            .select("id, name")
+            .eq("name", work.student)
+            .limit(1);
+
+    if (studentError) {
+        throw studentError;
+    }
+
+    let studentId;
+
+    // Если студент уже существует
+    if (students && students.length > 0) {
+
+        studentId = students[0].id;
+
+    } else {
+
+        // Если студента ещё нет — создаём
+        const { data: newStudent, error: insertStudentError } =
+            await db
+                .from("students")
+                .insert({
+                    name: work.student
+                })
+                .select()
+                .single();
+
+        if (insertStudentError) {
+            throw insertStudentError;
+        }
+
+        studentId = newStudent.id;
+    }
+
+
+    // Создаём работу
+    const { data: newWork, error: workError } =
+        await db
+            .from("works")
+            .insert({
+                student_id: studentId,
+                subject: work.subject,
+                work_type: work.workType,
+                work_number: work.workNumber,
+                hours: work.hours,
+                minutes: work.minutes,
+                total_minutes: work.totalMinutes,
+                price: work.price
+            })
+            .select()
+            .single();
+
+    if (workError) {
+        throw workError;
+    }
+
+    return newWork;
+}
 
 
 // ========================================
@@ -197,7 +245,7 @@ if (workForm) {
 
     workForm.addEventListener(
         "submit",
-        function(event) {
+        async function(event) {
 
             event.preventDefault();
 
@@ -255,12 +303,6 @@ if (workForm) {
                 calculatePrice(hours, minutes);
 
 
-            // Получаем старые работы
-
-            const works =
-                getWorks();
-
-
             // Создаём новую работу
 
             const newWork = {
@@ -290,14 +332,49 @@ if (workForm) {
             };
 
 
-            // Добавляем работу
+            try {
 
-            works.push(newWork);
+                // Сохраняем работу в Supabase
+
+                await saveWorkToSupabase(newWork);
 
 
-            // Сохраняем
+                // Пока также сохраняем в localStorage,
+                // чтобы существующие страницы продолжали работать
 
-            saveWorks(works);
+                const works = getWorks();
+
+                works.push(newWork);
+
+                saveWorks(works);
+
+
+                alert(
+                    `Работа добавлена!\n\n` +
+                    `${student}\n` +
+                    `${subject}\n` +
+                    `${workType} №${workNumber}\n\n` +
+                    `Время: ${hours} ч ${minutes} мин\n` +
+                    `Стоимость: ${formatMoney(price)}`
+                );
+
+
+                window.location.href = "index.html";
+
+
+            } catch (error) {
+
+                console.error(
+                    "Ошибка сохранения работы в Supabase:",
+                    error
+                );
+
+                alert(
+                    "Не удалось сохранить работу в Supabase.\n\n" +
+                    "Открой консоль браузера (F12) и посмотри ошибку."
+                );
+
+            }
 
 
             // Сообщение
@@ -398,19 +475,12 @@ function updateDashboard() {
     // Сколько получено
     // ------------------------------------
 
-    const payments =
-        getPayments().filter(
-            payment => payment.student === studentName
-        );
-
+    const payments = getPayments();
 
     let paidMoney = 0;
 
-
-    payments.forEach(payment => {
-
+    payments.forEach(function(payment) {
         paidMoney += payment.amount;
-
     });
 
 
