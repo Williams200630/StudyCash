@@ -410,34 +410,48 @@ async function updateDashboard() {
     try {
 
         // ========================================
-        // ПОЛУЧАЕМ ДАННЫЕ ИЗ SUPABASE
+        // ЗАГРУЖАЕМ ТОЛЬКО АКТИВНЫХ СТУДЕНТОВ
         // ========================================
 
-        const { data: students, error: studentsError } =
-            await db
-                .from("students")
-                .select("id, name")
-                .eq("archived", false);
+        const {
+            data: students,
+            error: studentsError
+        } = await db
+            .from("students")
+            .select("id, name")
+            .eq("archived", false);
 
         if (studentsError) {
             throw studentsError;
         }
 
 
-        const { data: works, error: worksError } =
-            await db
-                .from("works")
-                .select("*");
+        // ========================================
+        // ЗАГРУЖАЕМ ВСЕ РАБОТЫ
+        // ========================================
+
+        const {
+            data: allWorks,
+            error: worksError
+        } = await db
+            .from("works")
+            .select("*");
 
         if (worksError) {
             throw worksError;
         }
 
 
-        const { data: payments, error: paymentsError } =
-            await db
-                .from("payments")
-                .select("*");
+        // ========================================
+        // ЗАГРУЖАЕМ ВСЕ ОПЛАТЫ
+        // ========================================
+
+        const {
+            data: allPayments,
+            error: paymentsError
+        } = await db
+            .from("payments")
+            .select("*");
 
         if (paymentsError) {
             throw paymentsError;
@@ -445,44 +459,73 @@ async function updateDashboard() {
 
 
         // ========================================
-        // ОБЩАЯ СТАТИСТИКА
+        // ID АКТИВНЫХ СТУДЕНТОВ
+        // ========================================
+
+        const activeStudentIds =
+            new Set(
+                students.map(function (student) {
+                    return student.id;
+                })
+            );
+
+
+        // ========================================
+        // ОСТАВЛЯЕМ РАБОТЫ ТОЛЬКО АКТИВНЫХ
+        // ========================================
+
+        const works =
+            allWorks.filter(function (work) {
+                return activeStudentIds.has(
+                    work.student_id
+                );
+            });
+
+
+        // ========================================
+        // ОСТАВЛЯЕМ ОПЛАТЫ ТОЛЬКО АКТИВНЫХ
+        // ========================================
+
+        const payments =
+            allPayments.filter(function (payment) {
+                return activeStudentIds.has(
+                    payment.student_id
+                );
+            });
+
+
+        // ========================================
+        // СЧИТАЕМ
         // ========================================
 
         const studentsCount =
-            students ? students.length : 0;
+            students.length;
 
         const worksCount =
-            works ? works.length : 0;
-
+            works.length;
 
         let totalMinutes = 0;
         let totalMoney = 0;
         let paidMoney = 0;
 
 
-        // Считаем работы
-        if (works) {
+        works.forEach(function (work) {
 
-            works.forEach(function(work) {
+            totalMinutes +=
+                Number(work.total_minutes || 0);
 
-                totalMinutes +=
-                    Number(work.total_minutes || 0);
+            totalMoney +=
+                Number(work.price || 0);
 
-                totalMoney +=
-                    Number(work.price || 0);
-            });
-        }
+        });
 
 
-        // Считаем оплаты
-        if (payments) {
+        payments.forEach(function (payment) {
 
-            payments.forEach(function(payment) {
+            paidMoney +=
+                Number(payment.amount || 0);
 
-                paidMoney +=
-                    Number(payment.amount || 0);
-            });
-        }
+        });
 
 
         const debtMoney =
@@ -490,7 +533,7 @@ async function updateDashboard() {
 
 
         // ========================================
-        // ВЫВОДИМ ДАННЫЕ НА ГЛАВНУЮ
+        // ВЫВОДИМ НА ГЛАВНУЮ
         // ========================================
 
         const studentsElement =
@@ -513,14 +556,12 @@ async function updateDashboard() {
 
 
         if (studentsElement) {
-
             studentsElement.textContent =
                 studentsCount;
         }
 
 
         if (worksElement) {
-
             worksElement.textContent =
                 worksCount;
         }
@@ -529,13 +570,16 @@ async function updateDashboard() {
         if (timeElement) {
 
             const hours =
-                Math.floor(totalMinutes / 60);
+                Math.floor(
+                    totalMinutes / 60
+                );
 
             const minutes =
                 totalMinutes % 60;
 
             timeElement.textContent =
                 `${hours} ч ${minutes} мин`;
+
         }
 
 
@@ -543,6 +587,7 @@ async function updateDashboard() {
 
             moneyElement.textContent =
                 `${totalMoney.toFixed(2)} ₽`;
+
         }
 
 
@@ -550,6 +595,7 @@ async function updateDashboard() {
 
             paidElement.textContent =
                 `${paidMoney.toFixed(2)} ₽`;
+
         }
 
 
@@ -557,10 +603,8 @@ async function updateDashboard() {
 
             debtElement.textContent =
                 `${debtMoney.toFixed(2)} ₽`;
+
         }
-
-
-        console.log("Главная страница загружена из Supabase");
 
     } catch (error) {
 
@@ -568,6 +612,7 @@ async function updateDashboard() {
             "Ошибка загрузки данных с Supabase:",
             error
         );
+
     }
 }
 // ========================================
