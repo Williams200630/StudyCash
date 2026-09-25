@@ -544,34 +544,85 @@ const studentsList =
 
 if (studentsList) {
 
+    async function renderStudents(searchText = "") {
 
-    function renderStudents(searchText = "") {
+        // Показываем загрузку
 
-        const works = getWorks();
+        studentsList.innerHTML = `
+            <div class="no-students">
+                <h3>Загрузка...</h3>
+                <p>Получаем данные из базы.</p>
+            </div>
+        `;
 
 
-        // Получаем уникальных студентов
+        // Получаем студентов
 
-        const studentNames = [];
+        const { data: students, error: studentsError } =
+            await db
+                .from("students")
+                .select("*")
+                .order("name");
 
 
-        works.forEach(function(work) {
+        // Проверяем ошибку
 
-            if (!studentNames.includes(work.student)) {
+        if (studentsError) {
 
-                studentNames.push(work.student);
+            console.error(
+                "Ошибка загрузки студентов:",
+                studentsError
+            );
 
-            }
+            studentsList.innerHTML = `
+                <div class="no-students">
+                    <h3>Не удалось загрузить студентов</h3>
+                    <p>
+                        Проверь подключение к Supabase.
+                    </p>
+                </div>
+            `;
 
-        });
+            return;
+        }
+
+
+        // Получаем все работы
+
+        const { data: works, error: worksError } =
+            await db
+                .from("works")
+                .select("*");
+
+
+        // Проверяем ошибку
+
+        if (worksError) {
+
+            console.error(
+                "Ошибка загрузки работ:",
+                worksError
+            );
+
+            studentsList.innerHTML = `
+                <div class="no-students">
+                    <h3>Не удалось загрузить работы</h3>
+                    <p>
+                        Проверь подключение к Supabase.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
 
 
         // Фильтр поиска
 
         const filteredStudents =
-            studentNames.filter(function(name) {
+            students.filter(function(student) {
 
-                return name
+                return student.name
                     .toLowerCase()
                     .includes(
                         searchText.toLowerCase()
@@ -611,13 +662,14 @@ if (studentsList) {
         // Создаём карточки
 
         filteredStudents.forEach(
-            function(studentName) {
+            function(student) {
 
+                // Работы этого студента
 
                 const studentWorks =
                     works.filter(function(work) {
 
-                        return work.student === studentName;
+                        return work.student_id === student.id;
 
                     });
 
@@ -630,7 +682,7 @@ if (studentsList) {
                     function(work) {
 
                         totalMinutes +=
-                            work.totalMinutes;
+                            work.total_minutes || 0;
 
                     }
                 );
@@ -653,21 +705,32 @@ if (studentsList) {
                 studentWorks.forEach(
                     function(work) {
 
-                        totalMoney += work.price;
+                        totalMoney +=
+                            Number(work.price) || 0;
 
                     }
                 );
 
 
-                // Оплачено
+                // Пока оплаты берём из localStorage.
+                // Полностью перенесём их на Supabase
+                // на следующем этапе.
 
                 let paidMoney = 0;
 
-                studentWorks.forEach(
-                    function(work) {
+                const localPayments =
+                    getPayments().filter(
+                        payment =>
+                            payment.student ===
+                            student.name
+                    );
+
+
+                localPayments.forEach(
+                    function(payment) {
 
                         paidMoney +=
-                            work.paid || 0;
+                            Number(payment.amount) || 0;
 
                     }
                 );
@@ -687,12 +750,17 @@ if (studentsList) {
 
                 card.className =
                     "student-card";
-                card.addEventListener("click", function () {
 
-                    window.location.href =
-                        `student.html?name=${encodeURIComponent(studentName)}`;
 
-                });
+                card.addEventListener(
+                    "click",
+                    function() {
+
+                        window.location.href =
+                            `student.html?name=${encodeURIComponent(student.name)}`;
+
+                    }
+                );
 
 
                 card.innerHTML = `
@@ -706,7 +774,7 @@ if (studentsList) {
                         <div>
 
                             <div class="student-name">
-                                ${studentName}
+                                ${student.name}
                             </div>
 
                         </div>
@@ -806,16 +874,20 @@ if (studentsList) {
         );
 
 
-    searchInput.addEventListener(
-        "input",
-        function() {
+    if (searchInput) {
 
-            renderStudents(
-                searchInput.value
-            );
+        searchInput.addEventListener(
+            "input",
+            function() {
 
-        }
-    );
+                renderStudents(
+                    searchInput.value
+                );
+
+            }
+        );
+
+    }
 
 }
 /* ============================= */
