@@ -1629,3 +1629,96 @@ if (historyList) {
     renderHistory();
 
 }
+// ========================================
+// ВРЕМЕННЫЙ ЭКСПОРТ СТАРЫХ ДАННЫХ
+// ========================================
+
+function exportOldData() {
+
+    const works =
+        JSON.parse(
+            localStorage.getItem("studyCashWorks") || "[]"
+        );
+
+    const payments =
+        JSON.parse(
+            localStorage.getItem("studyCashPayments") || "[]"
+        );
+
+    const data = {
+        works: works,
+        payments: payments
+    };
+
+    const text =
+        JSON.stringify(data, null, 2);
+
+    const blob =
+        new Blob(
+            [text],
+            { type: "application/json" }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+        "studycash-old-data.json";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+}
+
+
+// Временно создаём кнопку
+
+const exportButton =
+    document.createElement("button");
+
+exportButton.textContent =
+    "📦 Экспортировать старые данные";
+
+exportButton.style.position =
+    "fixed";
+
+exportButton.style.bottom =
+    "20px";
+
+exportButton.style.right =
+    "20px";
+
+exportButton.style.zIndex =
+    "9999";
+
+exportButton.style.padding =
+    "12px 18px";
+
+exportButton.style.background =
+    "#222";
+
+exportButton.style.color =
+    "white";
+
+exportButton.style.border =
+    "none";
+
+exportButton.style.borderRadius =
+    "8px";
+
+exportButton.style.cursor =
+    "pointer";
+
+exportButton.addEventListener(
+    "click",
+    exportOldData
+);
+
+document.body.appendChild(
+    exportButton
+);
