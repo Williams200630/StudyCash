@@ -1720,3 +1720,229 @@ exportButton.addEventListener(
 document.body.appendChild(
     exportButton
 );
+// ========================================
+// ВРЕМЕННЫЙ ПЕРЕНОС СТАРЫХ ДАННЫХ
+// ========================================
+
+const oldPhoneData = {
+    works: [
+        {
+            student: "Верниченко",
+            subject: "Вычислительная математика",
+            workType: "Лабораторная работа",
+            workNumber: 1,
+            hours: 0,
+            minutes: 20,
+            totalMinutes: 20,
+            price: 166.66666666666666,
+            date: "2026-09-25T14:01:11.709Z"
+        },
+        {
+            student: "Верниченко",
+            subject: "Компьютерные сети",
+            workType: "Лабораторная работа",
+            workNumber: 1,
+            hours: 0,
+            minutes: 15,
+            totalMinutes: 15,
+            price: 125,
+            date: "2026-09-25T14:01:37.945Z"
+        },
+        {
+            student: "Верниченко",
+            subject: "Базы данных",
+            workType: "Лабораторная работа",
+            workNumber: 1,
+            hours: 0,
+            minutes: 40,
+            totalMinutes: 40,
+            price: 333.3333333333333,
+            date: "2026-09-25T14:01:58.394Z"
+        },
+        {
+            student: "Шевченко",
+            subject: "Базы данных",
+            workType: "Лабораторная работа",
+            workNumber: 1,
+            hours: 0,
+            minutes: 45,
+            totalMinutes: 45,
+            price: 375,
+            date: "2026-09-25T14:02:46.086Z"
+        }
+    ]
+};
+
+
+async function migrateOldPhoneData() {
+
+    try {
+
+        console.log("Начинаем перенос старых данных...");
+
+        for (const oldWork of oldPhoneData.works) {
+
+            // 1. Ищем студента
+            const { data: students, error: studentSearchError } =
+                await db
+                    .from("students")
+                    .select("id, name")
+                    .eq("name", oldWork.student)
+                    .limit(1);
+
+            if (studentSearchError) {
+                throw studentSearchError;
+            }
+
+            let studentId;
+
+            // 2. Если студент уже есть — используем его
+            if (students && students.length > 0) {
+
+                studentId = students[0].id;
+
+                console.log(
+                    `Студент ${oldWork.student} уже существует`
+                );
+
+            } else {
+
+                // 3. Если студента нет — создаём
+                const { data: newStudent, error: studentInsertError } =
+                    await db
+                        .from("students")
+                        .insert({
+                            name: oldWork.student
+                        })
+                        .select()
+                        .single();
+
+                if (studentInsertError) {
+                    throw studentInsertError;
+                }
+
+                studentId = newStudent.id;
+
+                console.log(
+                    `Создан студент ${oldWork.student}`
+                );
+            }
+
+
+            // 4. Проверяем, не переносили ли уже эту работу
+            const { data: existingWorks, error: existingWorksError } =
+                await db
+                    .from("works")
+                    .select("id")
+                    .eq("student_id", studentId)
+                    .eq("subject", oldWork.subject)
+                    .eq("work_type", oldWork.workType)
+                    .eq("work_number", oldWork.workNumber)
+                    .eq("created_at", oldWork.date)
+                    .limit(1);
+
+            if (existingWorksError) {
+                throw existingWorksError;
+            }
+
+
+            // 5. Если такой работы ещё нет — добавляем
+            if (!existingWorks || existingWorks.length === 0) {
+
+                const { error: workInsertError } =
+                    await db
+                        .from("works")
+                        .insert({
+                            student_id: studentId,
+                            subject: oldWork.subject,
+                            work_type: oldWork.workType,
+                            work_number: oldWork.workNumber,
+                            hours: oldWork.hours,
+                            minutes: oldWork.minutes,
+                            total_minutes: oldWork.totalMinutes,
+                            price: oldWork.price,
+                            created_at: oldWork.date
+                        });
+
+                if (workInsertError) {
+                    throw workInsertError;
+                }
+
+                console.log(
+                    `Добавлена работа: ${oldWork.student} — ${oldWork.subject}`
+                );
+
+            } else {
+
+                console.log(
+                    `Работа уже существует: ${oldWork.student} — ${oldWork.subject}`
+                );
+            }
+        }
+
+
+        alert(
+            "✅ Перенос завершён!\n\n" +
+            "Добавлены старые данные:\n" +
+            "• Верниченко — 3 работы\n" +
+            "• Шевченко — 1 работа\n\n" +
+            "Теперь проверь таблицы students и works в Supabase."
+        );
+
+    } catch (error) {
+
+        console.error("Ошибка переноса:", error);
+
+        alert(
+            "❌ Ошибка при переносе данных.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+// Создаём временную кнопку
+const migrationButton =
+    document.createElement("button");
+
+migrationButton.textContent =
+    "📥 Перенести старые данные";
+
+migrationButton.style.position =
+    "fixed";
+
+migrationButton.style.bottom =
+    "70px";
+
+migrationButton.style.right =
+    "20px";
+
+migrationButton.style.zIndex =
+    "9999";
+
+migrationButton.style.padding =
+    "12px 18px";
+
+migrationButton.style.background =
+    "#1976d2";
+
+migrationButton.style.color =
+    "white";
+
+migrationButton.style.border =
+    "none";
+
+migrationButton.style.borderRadius =
+    "8px";
+
+migrationButton.style.cursor =
+    "pointer";
+
+migrationButton.addEventListener(
+    "click",
+    migrateOldPhoneData
+);
+
+document.body.appendChild(
+    migrationButton
+);
