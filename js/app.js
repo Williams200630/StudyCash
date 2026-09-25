@@ -405,129 +405,261 @@ if (workForm) {
 // СТАТИСТИКА ГЛАВНОЙ СТРАНИЦЫ
 // ========================================
 
-function updateDashboard() {
+async function updateDashboard() {
 
-    const works = getWorks();
+    try {
 
-    // Если мы не на главной странице,
-    // ничего не делаем
-    if (!document.getElementById("students-count")) {
-        return;
-    }
+        // Получаем студентов из Supabase
+        const { data: students, error: studentsError } =
+            await db
+                .from("students")
+                .select("id, name")
+                .order("name");
 
-
-    // ------------------------------------
-    // Количество студентов
-    // ------------------------------------
-
-    const students = [];
-
-    works.forEach(function(work) {
-
-        if (!students.includes(work.student)) {
-            students.push(work.student);
+        if (studentsError) {
+            throw studentsError;
         }
 
-    });
+
+        // Получаем все работы
+        const { data: works, error: worksError } =
+            await db
+                .from("works")
+                .select("*");
+
+        if (worksError) {
+            throw worksError;
+        }
 
 
-    // ------------------------------------
-    // Количество работ
-    // ------------------------------------
+        // Получаем все платежи
+        const { data: payments, error: paymentsError } =
+            await db
+                .from("payments")
+                .select("*");
 
-    const worksCount = works.length;
-
-
-    // ------------------------------------
-    // Общее время
-    // ------------------------------------
-
-    let totalMinutes = 0;
-
-    works.forEach(function(work) {
-
-        totalMinutes += work.totalMinutes;
-
-    });
+        if (paymentsError) {
+            throw paymentsError;
+        }
 
 
-    const totalHours =
-        Math.floor(totalMinutes / 60);
-
-    const remainingMinutes =
-        totalMinutes % 60;
-
-
-    // ------------------------------------
-    // Общая сумма
-    // ------------------------------------
-
-    let totalMoney = 0;
-
-    works.forEach(function(work) {
-
-        totalMoney += work.price;
-
-    });
+        // Если студентов нет
+        if (!students || students.length === 0) {
+            console.log("Студентов пока нет");
+            return;
+        }
 
 
-    // ------------------------------------
-    // Сколько получено
-    // ------------------------------------
-
-    const payments = getPayments();
-
-    let paidMoney = 0;
-
-    payments.forEach(function(payment) {
-        paidMoney += payment.amount;
-    });
+        // Считаем общую статистику
+        let totalWorks = 0;
+        let totalMinutes = 0;
+        let totalMoney = 0;
+        let totalPaid = 0;
 
 
-    // ------------------------------------
-    // Сколько должны
-    // ------------------------------------
+        if (works) {
 
-    const debtMoney =
-        totalMoney - paidMoney;
+            works.forEach(function(work) {
 
+                totalWorks += 1;
 
-    // ------------------------------------
-    // Выводим данные
-    // ------------------------------------
+                totalMinutes +=
+                    Number(work.total_minutes || 0);
 
-    document.getElementById(
-        "students-count"
-    ).textContent = students.length;
+                totalMoney +=
+                    Number(work.price || 0);
+            });
+        }
 
 
-    document.getElementById(
-        "works-count"
-    ).textContent = worksCount;
+        if (payments) {
+
+            payments.forEach(function(payment) {
+
+                totalPaid +=
+                    Number(payment.amount || 0);
+            });
+        }
 
 
-    document.getElementById(
-        "total-time"
-    ).textContent =
-        `${totalHours} ч ${remainingMinutes} мин`;
+        const totalDebt =
+            totalMoney - totalPaid;
 
 
-    document.getElementById(
-        "total-money"
-    ).textContent =
-        formatMoney(totalMoney);
+        // Находим элементы главной страницы
+        const worksElement =
+            document.getElementById("totalWorks");
+
+        const timeElement =
+            document.getElementById("totalTime");
+
+        const moneyElement =
+            document.getElementById("totalMoney");
+
+        const paidElement =
+            document.getElementById("totalPaid");
+
+        const debtElement =
+            document.getElementById("totalDebt");
 
 
-    document.getElementById(
-        "paid-money"
-    ).textContent =
-        formatMoney(paidMoney);
+        // Выводим статистику
+        if (worksElement) {
+            worksElement.textContent =
+                totalWorks;
+        }
 
 
-    document.getElementById(
-        "debt-money"
-    ).textContent =
-        formatMoney(debtMoney);
+        if (timeElement) {
+
+            const hours =
+                Math.floor(totalMinutes / 60);
+
+            const minutes =
+                totalMinutes % 60;
+
+            if (hours > 0) {
+
+                timeElement.textContent =
+                    `${hours} ч ${minutes} мин`;
+
+            } else {
+
+                timeElement.textContent =
+                    `${minutes} мин`;
+            }
+        }
+
+
+        if (moneyElement) {
+
+            moneyElement.textContent =
+                `${totalMoney.toFixed(2)} ₽`;
+        }
+
+
+        if (paidElement) {
+
+            paidElement.textContent =
+                `${totalPaid.toFixed(2)} ₽`;
+        }
+
+
+        if (debtElement) {
+
+            debtElement.textContent =
+                `${totalDebt.toFixed(2)} ₽`;
+        }
+
+
+        // ========================================
+        // СПИСОК СТУДЕНТОВ НА ГЛАВНОЙ
+        // ========================================
+
+        const studentsContainer =
+            document.getElementById("studentsList");
+
+        if (!studentsContainer) {
+            return;
+        }
+
+
+        studentsContainer.innerHTML = "";
+
+
+        students.forEach(function(student) {
+
+            const studentWorks =
+                works.filter(function(work) {
+
+                    return work.student_id === student.id;
+                });
+
+
+            let studentMoney = 0;
+            let studentMinutes = 0;
+
+
+            studentWorks.forEach(function(work) {
+
+                studentMoney +=
+                    Number(work.price || 0);
+
+                studentMinutes +=
+                    Number(work.total_minutes || 0);
+            });
+
+
+            const studentPayments =
+                payments.filter(function(payment) {
+
+                    return payment.student_id === student.id;
+                });
+
+
+            let studentPaid = 0;
+
+
+            studentPayments.forEach(function(payment) {
+
+                studentPaid +=
+                    Number(payment.amount || 0);
+            });
+
+
+            const studentDebt =
+                studentMoney - studentPaid;
+
+
+            const studentElement =
+                document.createElement("div");
+
+            studentElement.className =
+                "student-card";
+
+
+            studentElement.innerHTML = `
+                <div class="student-card-name">
+                    ${student.name}
+                </div>
+
+                <div class="student-card-info">
+                    Работ: ${studentWorks.length}
+                </div>
+
+                <div class="student-card-info">
+                    Время: ${Math.floor(studentMinutes / 60)} ч ${studentMinutes % 60} мин
+                </div>
+
+                <div class="student-card-money">
+                    Долг: ${studentDebt.toFixed(2)} ₽
+                </div>
+            `;
+
+
+            studentElement.addEventListener(
+                "click",
+                function() {
+
+                    window.location.href =
+                        `student.html?name=${encodeURIComponent(student.name)}`;
+                }
+            );
+
+
+            studentsContainer.appendChild(
+                studentElement
+            );
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Ошибка загрузки главной страницы:",
+            error
+        );
+    }
 }
 
 
