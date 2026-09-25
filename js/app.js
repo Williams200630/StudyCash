@@ -1676,8 +1676,6 @@ function exportOldData() {
 }
 
 
-// Временно создаём кнопку
-
 const exportButton =
     document.createElement("button");
 
