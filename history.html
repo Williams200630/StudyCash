@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>История — StudyCash</title>
+
+    <link
+            rel="stylesheet"
+            href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+    <div class="container header-content">
+
+        <a
+                href="index.html"
+                class="logo"
+        >
+
+            <span class="logo-icon">💰</span>
+
+            <span>StudyCash</span>
+
+        </a>
+
+
+        <nav class="navigation">
+
+            <a href="index.html">
+                Главная
+            </a>
+
+            <a href="students.html">
+                Студенты
+            </a>
+
+            <a href="add-work.html">
+                Добавить работу
+            </a>
+
+            <a
+                    href="history.html"
+                    class="active"
+            >
+                История
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<main>
+
+
+    <section class="page-header">
+
+        <div class="container">
+
+            <h1>
+                История
+            </h1>
+
+            <p>
+                Все выполненные работы и полученные оплаты.
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <section class="history-section">
+
+        <div class="container">
+
+
+            <!-- Фильтры -->
+
+            <div class="history-filters">
+
+
+                <div class="history-search">
+
+                    <input
+                            type="text"
+                            id="history-search"
+                            placeholder="🔍 Найти студента..."
+                    >
+
+                </div>
+
+
+                <div class="history-filter-buttons">
+
+                    <button
+                            type="button"
+                            class="history-filter active"
+                            data-filter="all"
+                    >
+                        Все
+                    </button>
+
+                    <button
+                            type="button"
+                            class="history-filter"
+                            data-filter="works"
+                    >
+                        Работы
+                    </button>
+
+                    <button
+                            type="button"
+                            class="history-filter"
+                            data-filter="payments"
+                    >
+                        Оплаты
+                    </button>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- Список истории -->
+
+            <div
+                    class="history-list"
+                    id="history-list"
+            >
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<footer class="footer">
+
+    <div class="container">
+
+        <p>
+            StudyCash © 2026
+        </p>
+
+        <p>
+            Личный учёт учебных работ
+        </p>
+
+    </div>
+
+</footer>
+
+
+
+<script src="js/app.js"></script>
+
+</body>
+
+</html>

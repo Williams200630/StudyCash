@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Добавить работу — StudyCash</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="container header-content">
+
+        <a href="index.html" class="logo">
+            <span class="logo-icon">💰</span>
+            <span>StudyCash</span>
+        </a>
+
+        <nav class="navigation">
+            <a href="index.html">Главная</a>
+            <a href="students.html">
+                Студенты
+            </a>
+            <a href="add-work.html" class="active">Добавить работу</a>
+            <a href="history.html">
+                История
+            </a>
+        </nav>
+
+    </div>
+</header>
+
+
+<main>
+
+    <section class="page-header">
+        <div class="container">
+
+            <h1>Добавить работу</h1>
+
+            <p>
+                Запиши выполненную работу и фактически потраченное время.
+            </p>
+
+        </div>
+    </section>
+
+
+    <section class="add-work-section">
+
+        <div class="container">
+
+            <div class="work-form-card">
+
+                <form id="work-form">
+
+                    <div class="form-group">
+
+                        <label for="student">
+                            Студент
+                        </label>
+
+                        <input
+                                type="text"
+                                id="student"
+                                placeholder="Например: Миша"
+                                required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="subject">
+                            Предмет
+                        </label>
+
+                        <select id="subject" required>
+
+                            <option value="">
+                                Выберите предмет
+                            </option>
+
+                            <option value="Веб-программирование">
+                                Веб-программирование
+                            </option>
+
+                            <option value="Вычислительная математика">
+                                Вычислительная математика
+                            </option>
+
+                            <option value="Психология">
+                                Психология
+                            </option>
+
+                            <option value="Экология">
+                                Экология
+                            </option>
+
+                            <option value="Физическая культура">
+                                Физическая культура
+                            </option>
+
+                            <option value="Базы данных">
+                                Базы данных
+                            </option>
+
+                            <option value="Компьютерные сети">
+                                Компьютерные сети
+                            </option>
+
+                            <option value="Графический дизайн">
+                                Графический дизайн
+                            </option>
+
+                            <option value="Программирование на языках низкого уровня">
+                                Программирование на языках низкого уровня
+                            </option>
+
+                            <option value="Операционные системы">
+                                Операционные системы
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label for="work-type">
+                                Тип работы
+                            </label>
+
+                            <select id="work-type" required>
+
+                                <option value="">
+                                    Выберите тип
+                                </option>
+
+                                <option value="Лабораторная работа">
+                                    Лабораторная работа
+                                </option>
+
+                                <option value="Практическая работа">
+                                    Практическая работа
+                                </option>
+
+                                <option value="Контрольная работа">
+                                    Контрольная работа
+                                </option>
+
+                                <option value="Реферат">
+                                    Реферат
+                                </option>
+
+                                <option value="Курсовая работа">
+                                    Курсовая работа
+                                </option>
+
+                                <option value="Другое">
+                                    Другое
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="work-number">
+                                Номер работы
+                            </label>
+
+                            <input
+                                    type="number"
+                                    id="work-number"
+                                    min="1"
+                                    placeholder="Например: 1"
+                                    required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Потраченное время
+                        </label>
+
+                        <div class="time-inputs">
+
+                            <div>
+
+                                <input
+                                        type="number"
+                                        id="hours"
+                                        min="0"
+                                        value="0"
+                                >
+
+                                <span>часов</span>
+
+                            </div>
+
+
+                            <div>
+
+                                <input
+                                        type="number"
+                                        id="minutes"
+                                        min="0"
+                                        max="59"
+                                        value="0"
+                                >
+
+                                <span>минут</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="calculation-box">
+
+                        <div>
+                            <span>Ставка</span>
+                            <strong>500 ₽ / час</strong>
+                        </div>
+
+                        <div>
+                            <span>Время</span>
+                            <strong id="calculated-time">
+                                0 ч 0 мин
+                            </strong>
+                        </div>
+
+                        <div class="price-result">
+                            <span>Стоимость работы</span>
+
+                            <strong id="calculated-price">
+                                0 ₽
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-buttons">
+
+                        <a
+                                href="index.html"
+                                class="secondary-button"
+                        >
+                            Отмена
+                        </a>
+
+                        <button
+                                type="submit"
+                                class="primary-button"
+                        >
+                            Добавить работу
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer class="footer">
+
+    <div class="container">
+
+        <p>
+            StudyCash © 2026
+        </p>
+
+        <p>
+            Личный учёт учебных работ
+        </p>
+
+    </div>
+
+</footer>
+
+
+<script src="js/app.js"></script>
+
+</body>
+</html>
+

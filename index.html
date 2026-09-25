@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudyCash</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="container header-content">
+
+        <div class="logo">
+            <span class="logo-icon">💰</span>
+            <span>StudyCash</span>
+        </div>
+
+        <nav class="navigation">
+            <a href="index.html" class="active">Главная</a>
+            <a href="students.html">Студенты</a>
+            <a href="add-work.html">
+                Добавить работу
+            </a>
+            <a href="history.html">
+                История
+            </a>
+        </nav>
+
+    </div>
+</header>
+
+
+<main>
+
+    <section class="hero">
+        <div class="container">
+
+            <div class="hero-text">
+                <h1>Учёт учебных работ</h1>
+
+                <p>
+                    Удобный учёт выполненных работ, затраченного времени
+                    и оплаты от студентов.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+
+    <section class="statistics">
+        <div class="container">
+
+            <div class="section-title">
+                <h2>Общая статистика</h2>
+                <p>Текущая информация по всем работам</p>
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+
+                    <div>
+                        <p class="stat-name">Студенты</p>
+                        <h3 id="students-count">0</h3>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+
+                    <div>
+                        <p class="stat-name">Работы</p>
+                        <h3 id="works-count">0</h3>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+
+                    <div>
+                        <p class="stat-name">Общее время</p>
+                        <h3 id="total-time">0 ч 0 мин</h3>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon">💵</div>
+
+                    <div>
+                        <p class="stat-name">Начислено</p>
+                        <h3 id="total-money">0 ₽</h3>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+
+                    <div>
+                        <p class="stat-name">Получено</p>
+                        <h3 id="paid-money">0 ₽</h3>
+                    </div>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+
+                    <div>
+                        <p class="stat-name">Осталось получить</p>
+                        <h3 id="debt-money">0 ₽</h3>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+
+    <section class="rate-section">
+        <div class="container">
+
+            <div class="rate-card">
+
+                <div>
+                    <p class="rate-label">Текущая ставка</p>
+
+                    <h2>
+                        <span id="hour-rate">500</span> ₽
+                        <span class="rate-small">/ час</span>
+                    </h2>
+
+                    <p class="rate-description">
+                        Стоимость рассчитывается автоматически
+                        исходя из фактически потраченного времени.
+                    </p>
+                </div>
+
+
+                <a
+                        href="add-work.html"
+                        class="primary-button"
+                >
+                    + Добавить работу
+                </a>
+
+            </div>
+
+        </div>
+    </section>
+
+
+    <section class="subjects">
+        <div class="container">
+
+            <div class="section-title">
+                <h2>Мои предметы</h2>
+                <p>10 предметов, по которым выполняются работы</p>
+            </div>
+
+
+            <div class="subjects-grid">
+
+                <div class="subject-card">
+                    <span>01</span>
+                    <strong>Веб-программирование</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>02</span>
+                    <strong>Вычислительная математика</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>03</span>
+                    <strong>Психология</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>04</span>
+                    <strong>Экология</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>05</span>
+                    <strong>Физическая культура</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>06</span>
+                    <strong>Базы данных</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>07</span>
+                    <strong>Компьютерные сети</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>08</span>
+                    <strong>Графический дизайн</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>09</span>
+                    <strong>Программирование на языках низкого уровня</strong>
+                </div>
+
+                <div class="subject-card">
+                    <span>10</span>
+                    <strong>Операционные системы</strong>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+
+<footer class="footer">
+    <div class="container">
+
+        <p>
+            StudyCash © 2026
+        </p>
+
+        <p>
+            Личный учёт учебных работ
+        </p>
+
+    </div>
+</footer>
+
+
+<script src="js/app.js"></script>
+
+</body>
+</html>
+

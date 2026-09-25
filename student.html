@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Студент — StudyCash</title>
+
+    <link
+            rel="stylesheet"
+            href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+    <div class="container header-content">
+
+        <a
+                href="index.html"
+                class="logo"
+        >
+
+            <span class="logo-icon">💰</span>
+
+            <span>StudyCash</span>
+
+        </a>
+
+
+        <nav class="navigation">
+
+            <a href="index.html">
+                Главная
+            </a>
+
+            <a
+                    href="students.html"
+                    class="active"
+            >
+                Студенты
+            </a>
+
+            <a href="add-work.html">
+                Добавить работу
+            </a>
+
+            <a href="history.html">
+                История
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<main>
+
+
+    <section class="page-header">
+
+        <div class="container">
+
+            <a
+                    href="students.html"
+                    class="back-link"
+            >
+                ← Все студенты
+            </a>
+
+            <h1 id="student-title">
+                Студент
+            </h1>
+
+            <p id="student-subtitle">
+                Информация о выполненных работах
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <section class="student-detail-section">
+
+        <div class="container">
+
+
+            <!-- Статистика студента -->
+
+            <div class="student-summary-grid">
+
+
+                <div class="student-summary-card">
+
+                <span class="summary-icon">
+                    📚
+                </span>
+
+                    <div>
+
+                        <p>
+                            Работы
+                        </p>
+
+                        <strong id="student-works-count">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="student-summary-card">
+
+                <span class="summary-icon">
+                    ⏱️
+                </span>
+
+                    <div>
+
+                        <p>
+                            Общее время
+                        </p>
+
+                        <strong id="student-total-time">
+                            0 ч 0 мин
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="student-summary-card">
+
+                <span class="summary-icon">
+                    💵
+                </span>
+
+                    <div>
+
+                        <p>
+                            Начислено
+                        </p>
+
+                        <strong id="student-total-money">
+                            0 ₽
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="student-summary-card">
+
+                <span class="summary-icon">
+                    ⏳
+                </span>
+
+                    <div>
+
+                        <p>
+                            Осталось получить
+                        </p>
+
+                        <strong
+                                id="student-debt-money"
+                                class="debt-text"
+                        >
+                            0 ₽
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- Оплата -->
+
+            <div class="payment-card">
+
+                <div class="payment-info">
+
+                    <h2>
+                        Оплата
+                    </h2>
+
+                    <p>
+                        Внеси сумму, которую студент передал.
+                        Можно оплачивать частями.
+                    </p>
+
+
+                    <div class="payment-form">
+
+                        <input
+                                type="number"
+                                id="payment-amount"
+                                min="0.01"
+                                step="0.01"
+                                placeholder="Например: 500"
+                        >
+
+                        <button
+                                type="button"
+                                class="primary-button"
+                                id="add-payment-button"
+                        >
+                            + Внести оплату
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="payment-total">
+
+        <span>
+            Получено
+        </span>
+
+                    <strong id="student-paid-money">
+                        0 ₽
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Список работ -->
+
+            <div class="works-section">
+
+                <div class="section-title">
+
+                    <h2>
+                        Работы студента
+                    </h2>
+
+                    <p>
+                        Все выполненные работы и их стоимость
+                    </p>
+
+                </div>
+
+
+                <div
+                        class="student-works-list"
+                        id="student-works-list"
+                >
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<footer class="footer">
+
+    <div class="container">
+
+        <p>
+            StudyCash © 2026
+        </p>
+
+        <p>
+            Личный учёт учебных работ
+        </p>
+
+    </div>
+
+</footer>
+
+
+
+<script src="js/app.js"></script>
+
+</body>
+
+</html>
