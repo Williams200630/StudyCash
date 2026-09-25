@@ -12,6 +12,15 @@ const db = window.supabase.createClient(
 );
 
 console.log("Supabase подключён");
+db.from("students")
+    .select("*")
+    .then(({ data, error }) => {
+        console.log("Supabase students:", data);
+
+        if (error) {
+            console.error("Ошибка Supabase:", error);
+        }
+    });
 // Стоимость одного часа
 const HOURLY_RATE = 500;
 
