@@ -416,7 +416,8 @@ async function updateDashboard() {
         const { data: students, error: studentsError } =
             await db
                 .from("students")
-                .select("id, name");
+                .select("id, name")
+                .eq("archived", false);
 
         if (studentsError) {
             throw studentsError;
