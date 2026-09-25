@@ -957,7 +957,7 @@ if (studentsList) {
 
     }
 }
-    /* ============================= */
+/* ============================= */
 /* ИСТОРИЯ */
 /* ============================= */
 
@@ -969,6 +969,10 @@ if (historyList) {
 
     let currentHistoryFilter = "all";
 
+
+    // ========================================
+    // ФОРМАТ ДАТЫ
+    // ========================================
 
     function formatDate(dateString) {
 
@@ -988,18 +992,239 @@ if (historyList) {
     }
 
 
-    function renderHistory() {
+    // ========================================
+    // ЗАГРУЗКА ИСТОРИИ ИЗ SUPABASE
+    // ========================================
 
-        const works =
-            getWorks();
+    async function renderHistory() {
+
+        // Показываем загрузку
+
+        historyList.innerHTML = `
+            <div class="history-empty">
+                Загрузка истории...
+            </div>
+        `;
 
 
-        const payments =
-            getPayments();
+        // ========================================
+        // ПОЛУЧАЕМ СТУДЕНТОВ
+        // ========================================
 
+        const {
+            data: students,
+            error: studentsError
+        } = await db
+            .from("students")
+            .select("id, name");
+
+
+        if (studentsError) {
+
+            console.error(
+                "Ошибка загрузки студентов:",
+                studentsError
+            );
+
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    Не удалось загрузить историю.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        // ========================================
+        // ПОЛУЧАЕМ РАБОТЫ
+        // ========================================
+
+        const {
+            data: works,
+            error: worksError
+        } = await db
+            .from("works")
+            .select("*");
+
+
+        if (worksError) {
+
+            console.error(
+                "Ошибка загрузки работ:",
+                worksError
+            );
+
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    Не удалось загрузить историю работ.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        // ========================================
+        // ПОЛУЧАЕМ ОПЛАТЫ
+        // ========================================
+
+        const {
+            data: payments,
+            error: paymentsError
+        } = await db
+            .from("payments")
+            .select("*");
+
+
+        if (paymentsError) {
+
+            console.error(
+                "Ошибка загрузки оплат:",
+                paymentsError
+            );
+
+            historyList.innerHTML = `
+                <div class="history-empty">
+                    Не удалось загрузить историю оплат.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        // ========================================
+        // СОЗДАЁМ ИСТОРИЮ
+        // ========================================
+
+        let historyItems = [];
+
+
+        // ========================================
+        // ДОБАВЛЯЕМ РАБОТЫ
+        // ========================================
+
+        if (
+            currentHistoryFilter === "all" ||
+            currentHistoryFilter === "works"
+        ) {
+
+            works.forEach(
+                function (work) {
+
+                    const student =
+                        students.find(
+                            function (item) {
+
+                                return (
+                                    item.id ===
+                                    work.student_id
+                                );
+
+                            }
+                        );
+
+
+                    const studentName =
+                        student
+                            ? student.name
+                            : "Неизвестный студент";
+
+
+                    historyItems.push({
+
+                        type: "work",
+
+                        date:
+                        work.created_at,
+
+                        student:
+                        studentName,
+
+                        title:
+                            `${work.work_type} №${work.work_number}`,
+
+                        description:
+                            `${work.subject} • ${work.hours} ч ${work.minutes} мин`,
+
+                        amount:
+                            Number(work.price) || 0
+
+                    });
+
+                }
+            );
+
+        }
+
+
+        // ========================================
+        // ДОБАВЛЯЕМ ОПЛАТЫ
+        // ========================================
+
+        if (
+            currentHistoryFilter === "all" ||
+            currentHistoryFilter === "payments"
+        ) {
+
+            payments.forEach(
+                function (payment) {
+
+                    const student =
+                        students.find(
+                            function (item) {
+
+                                return (
+                                    item.id ===
+                                    payment.student_id
+                                );
+
+                            }
+                        );
+
+
+                    const studentName =
+                        student
+                            ? student.name
+                            : "Неизвестный студент";
+
+
+                    historyItems.push({
+
+                        type: "payment",
+
+                        date:
+                        payment.created_at,
+
+                        student:
+                        studentName,
+
+                        title:
+                            "Получена оплата",
+
+                        description:
+                            "Оплата от студента",
+
+                        amount:
+                            Number(payment.amount) || 0
+
+                    });
+
+                }
+            );
+
+        }
+
+
+        // ========================================
+        // ПОИСК
+        // ========================================
 
         const searchInput =
-            document.getElementById("history-search");
+            document.getElementById(
+                "history-search"
+            );
 
 
         const searchText =
@@ -1010,97 +1235,49 @@ if (historyList) {
                 : "";
 
 
-        let historyItems = [];
-
-
-        /* Добавляем работы */
-
-        if (
-            currentHistoryFilter === "all" ||
-            currentHistoryFilter === "works"
-        ) {
-
-            works.forEach(work => {
-
-                historyItems.push({
-
-                    type: "work",
-
-                    date: work.date,
-
-                    student: work.student,
-
-                    title:
-                        `${work.workType} №${work.workNumber}`,
-
-                    description:
-                        `${work.subject} • ${work.hours} ч ${work.minutes} мин`,
-
-                    amount: work.price
-
-                });
-
-            });
-
-        }
-
-
-        /* Добавляем оплаты */
-
-        if (
-            currentHistoryFilter === "all" ||
-            currentHistoryFilter === "payments"
-        ) {
-
-            payments.forEach(payment => {
-
-                historyItems.push({
-
-                    type: "payment",
-
-                    date: payment.date,
-
-                    student: payment.student,
-
-                    title: "Получена оплата",
-
-                    description:
-                        "Оплата от студента",
-
-                    amount: payment.amount
-
-                });
-
-            });
-
-        }
-
-
-        /* Поиск */
-
         if (searchText) {
 
             historyItems =
-                historyItems.filter(item =>
-                    item.student
-                        .toLowerCase()
-                        .includes(searchText)
+                historyItems.filter(
+                    function (item) {
+
+                        return item.student
+                            .toLowerCase()
+                            .includes(searchText);
+
+                    }
                 );
 
         }
 
 
-        /* Сортировка от новых к старым */
+        // ========================================
+        // СОРТИРОВКА
+        // НОВЫЕ СОБЫТИЯ СВЕРХУ
+        // ========================================
 
         historyItems.sort(
-            (a, b) =>
-                new Date(b.date) -
-                new Date(a.date)
+            function (a, b) {
+
+                return (
+                    new Date(b.date) -
+                    new Date(a.date)
+                );
+
+            }
         );
 
 
+        // ========================================
+        // ОЧИЩАЕМ СПИСОК
+        // ========================================
+
         historyList.innerHTML = "";
 
+
+        // ========================================
+        // ЕСЛИ НИЧЕГО НЕ НАЙДЕНО
+        // ========================================
 
         if (historyItems.length === 0) {
 
@@ -1114,141 +1291,163 @@ if (historyList) {
         }
 
 
-        historyItems.forEach(item => {
+        // ========================================
+        // СОЗДАЁМ ЭЛЕМЕНТЫ ИСТОРИИ
+        // ========================================
 
-            const historyItem =
-                document.createElement("div");
+        historyItems.forEach(
+            function (item) {
+
+                const historyItem =
+                    document.createElement("div");
 
 
-            historyItem.className =
-                "history-item";
+                historyItem.className =
+                    "history-item";
 
 
-            if (item.type === "payment") {
+                // Если это оплата
 
-                historyItem.classList.add(
-                    "history-payment"
+                if (item.type === "payment") {
+
+                    historyItem.classList.add(
+                        "history-payment"
+                    );
+
+                }
+
+
+                // ========================================
+                // ЛЕВАЯ ЧАСТЬ
+                // ========================================
+
+                const main =
+                    document.createElement("div");
+
+
+                main.className =
+                    "history-item-main";
+
+
+                const icon =
+                    document.createElement("div");
+
+
+                icon.className =
+                    "history-item-icon";
+
+
+                icon.textContent =
+                    item.type === "payment"
+                        ? "💰"
+                        : "📚";
+
+
+                const textBlock =
+                    document.createElement("div");
+
+
+                const title =
+                    document.createElement("h3");
+
+
+                title.className =
+                    "history-item-title";
+
+
+                title.textContent =
+                    `${item.student} — ${item.title}`;
+
+
+                const description =
+                    document.createElement("p");
+
+
+                description.className =
+                    "history-item-description";
+
+
+                description.textContent =
+                    item.description;
+
+
+                textBlock.appendChild(title);
+
+                textBlock.appendChild(
+                    description
+                );
+
+
+                main.appendChild(icon);
+
+                main.appendChild(textBlock);
+
+
+                // ========================================
+                // ПРАВАЯ ЧАСТЬ
+                // ========================================
+
+                const right =
+                    document.createElement("div");
+
+
+                right.className =
+                    "history-item-right";
+
+
+                const price =
+                    document.createElement("span");
+
+
+                price.className =
+                    "history-item-price";
+
+
+                price.textContent =
+                    item.type === "payment"
+                        ? `+${formatMoney(item.amount)}`
+                        : formatMoney(item.amount);
+
+
+                const date =
+                    document.createElement("span");
+
+
+                date.className =
+                    "history-item-date";
+
+
+                date.textContent =
+                    formatDate(item.date);
+
+
+                right.appendChild(price);
+
+                right.appendChild(date);
+
+
+                // ========================================
+                // СОБИРАЕМ ЭЛЕМЕНТ
+                // ========================================
+
+                historyItem.appendChild(main);
+
+                historyItem.appendChild(right);
+
+
+                historyList.appendChild(
+                    historyItem
                 );
 
             }
-
-
-            /* Левая часть */
-
-            const main =
-                document.createElement("div");
-
-
-            main.className =
-                "history-item-main";
-
-
-            const icon =
-                document.createElement("div");
-
-
-            icon.className =
-                "history-item-icon";
-
-
-            icon.textContent =
-                item.type === "payment"
-                    ? "💰"
-                    : "📚";
-
-
-            const textBlock =
-                document.createElement("div");
-
-
-            const title =
-                document.createElement("h3");
-
-
-            title.className =
-                "history-item-title";
-
-
-            title.textContent =
-                `${item.student} — ${item.title}`;
-
-
-            const description =
-                document.createElement("p");
-
-
-            description.className =
-                "history-item-description";
-
-
-            description.textContent =
-                item.description;
-
-
-            textBlock.appendChild(title);
-
-            textBlock.appendChild(description);
-
-
-            main.appendChild(icon);
-
-            main.appendChild(textBlock);
-
-
-            /* Правая часть */
-
-            const right =
-                document.createElement("div");
-
-
-            right.className =
-                "history-item-right";
-
-
-            const price =
-                document.createElement("span");
-
-
-            price.className =
-                "history-item-price";
-
-
-            price.textContent =
-                item.type === "payment"
-                    ? `+${formatMoney(item.amount)}`
-                    : formatMoney(item.amount);
-
-
-            const date =
-                document.createElement("span");
-
-
-            date.className =
-                "history-item-date";
-
-
-            date.textContent =
-                formatDate(item.date);
-
-
-            right.appendChild(price);
-
-            right.appendChild(date);
-
-
-            historyItem.appendChild(main);
-
-            historyItem.appendChild(right);
-
-
-            historyList.appendChild(historyItem);
-
-        });
+        );
 
     }
 
 
-    /* Переключение фильтров */
+    // ========================================
+    // ПЕРЕКЛЮЧЕНИЕ ФИЛЬТРОВ
+    // ========================================
 
     const filterButtons =
         document.querySelectorAll(
@@ -1256,36 +1455,45 @@ if (historyList) {
         );
 
 
-    filterButtons.forEach(button => {
+    filterButtons.forEach(
+        function (button) {
 
-        button.addEventListener(
-            "click",
-            function () {
+            button.addEventListener(
+                "click",
+                function () {
 
-                filterButtons.forEach(
-                    item =>
-                        item.classList.remove(
-                            "active"
-                        )
-                );
+                    filterButtons.forEach(
+                        function (item) {
 
+                            item.classList.remove(
+                                "active"
+                            );
 
-                this.classList.add("active");
-
-
-                currentHistoryFilter =
-                    this.dataset.filter;
+                        }
+                    );
 
 
-                renderHistory();
-
-            }
-        );
-
-    });
+                    this.classList.add(
+                        "active"
+                    );
 
 
-    /* Поиск */
+                    currentHistoryFilter =
+                        this.dataset.filter;
+
+
+                    renderHistory();
+
+                }
+            );
+
+        }
+    );
+
+
+    // ========================================
+    // ПОИСК
+    // ========================================
 
     const historySearch =
         document.getElementById(
@@ -1297,11 +1505,19 @@ if (historyList) {
 
         historySearch.addEventListener(
             "input",
-            renderHistory
+            function () {
+
+                renderHistory();
+
+            }
         );
 
     }
 
+
+    // ========================================
+    // ПЕРВЫЙ ЗАПУСК
+    // ========================================
 
     renderHistory();
 
