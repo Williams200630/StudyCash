@@ -12,15 +12,22 @@ const db = window.supabase.createClient(
 );
 
 console.log("Supabase подключён");
-db.from("students")
-    .select("*")
-    .then(({ data, error }) => {
-        console.log("Supabase students:", data);
 
-        if (error) {
-            console.error("Ошибка Supabase:", error);
-        }
-    });
+console.log("Начинаем проверку таблицы students...");
+
+async function testSupabase() {
+    console.log("Запрос отправлен");
+
+    const { data, error } = await db
+        .from("students")
+        .select("*");
+
+    console.log("Ответ Supabase:");
+    console.log("data =", data);
+    console.log("error =", error);
+}
+
+testSupabase();
 // Стоимость одного часа
 const HOURLY_RATE = 500;
 
