@@ -1992,3 +1992,246 @@ migrationButton.addEventListener(
 document.body.appendChild(
     migrationButton
 );
+// ========================================
+// ОПЛАТА СТУДЕНТА — SUPABASE
+// ========================================
+
+const paymentButton =
+    document.getElementById("add-payment-button");
+
+
+if (paymentButton) {
+
+    paymentButton.addEventListener(
+        "click",
+        async function () {
+
+            const paymentInput =
+                document.getElementById("payment-amount");
+
+            const amount =
+                Number(paymentInput.value);
+
+
+            // Проверяем сумму
+
+            if (!amount || amount <= 0) {
+
+                alert("Укажи сумму оплаты.");
+
+                return;
+            }
+
+
+            // Получаем имя студента из URL
+
+            const urlParams =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            const studentName =
+                urlParams.get("name");
+
+
+            if (!studentName) {
+
+                alert(
+                    "Не удалось определить студента."
+                );
+
+                return;
+            }
+
+
+            try {
+
+                // ========================================
+                // ИЩЕМ СТУДЕНТА
+                // ========================================
+
+                const { data: student, error: studentError } =
+                    await db
+                        .from("students")
+                        .select("id, name")
+                        .eq("name", studentName)
+                        .single();
+
+
+                if (studentError) {
+                    throw studentError;
+                }
+
+
+                // ========================================
+                // СОХРАНЯЕМ ОПЛАТУ В SUPABASE
+                // ========================================
+
+                const { error: paymentError } =
+                    await db
+                        .from("payments")
+                        .insert({
+                            student_id: student.id,
+                            amount: amount
+                        });
+
+
+                if (paymentError) {
+                    throw paymentError;
+                }
+
+
+                // ========================================
+                // ОБНОВЛЯЕМ ОТОБРАЖЕНИЕ
+                // ========================================
+
+                const paidElement =
+                    document.getElementById(
+                        "student-paid-money"
+                    );
+
+
+                if (paidElement) {
+
+                    const { data: payments } =
+                        await db
+                            .from("payments")
+                            .select("amount")
+                            .eq(
+                                "student_id",
+                                student.id
+                            );
+
+
+                    let totalPaid = 0;
+
+
+                    if (payments) {
+
+                        payments.forEach(
+                            function (payment) {
+
+                                totalPaid +=
+                                    Number(
+                                        payment.amount
+                                    ) || 0;
+
+                            }
+                        );
+
+                    }
+
+
+                    paidElement.textContent =
+                        formatMoney(totalPaid);
+                }
+
+
+                // ========================================
+                // ПЕРЕСЧИТЫВАЕМ ДОЛГ
+                // ========================================
+
+                const debtElement =
+                    document.getElementById(
+                        "student-debt-money"
+                    );
+
+
+                if (debtElement) {
+
+                    const { data: works } =
+                        await db
+                            .from("works")
+                            .select("price")
+                            .eq(
+                                "student_id",
+                                student.id
+                            );
+
+
+                    let totalMoney = 0;
+
+
+                    if (works) {
+
+                        works.forEach(
+                            function (work) {
+
+                                totalMoney +=
+                                    Number(
+                                        work.price
+                                    ) || 0;
+
+                            }
+                        );
+
+                    }
+
+
+                    const { data: payments } =
+                        await db
+                            .from("payments")
+                            .select("amount")
+                            .eq(
+                                "student_id",
+                                student.id
+                            );
+
+
+                    let totalPaid = 0;
+
+
+                    if (payments) {
+
+                        payments.forEach(
+                            function (payment) {
+
+                                totalPaid +=
+                                    Number(
+                                        payment.amount
+                                    ) || 0;
+
+                            }
+                        );
+
+                    }
+
+
+                    const debt =
+                        totalMoney - totalPaid;
+
+
+                    debtElement.textContent =
+                        formatMoney(debt);
+                }
+
+
+                // Очищаем поле
+
+                paymentInput.value = "";
+
+
+                alert(
+                    `Оплата ${formatMoney(amount)} успешно добавлена.`
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Ошибка сохранения оплаты:",
+                    error
+                );
+
+
+                alert(
+                    "Не удалось сохранить оплату в Supabase.\n\n" +
+                    "Подробности смотри в консоли браузера."
+                );
+
+            }
+
+        }
+    );
+
+}
