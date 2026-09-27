@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudyCash Timer</title>
+
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="logo">S</div>
+
+        <div>
+            <h1>StudyCash</h1>
+            <p>Учёт времени</p>
+        </div>
+    </div>
+
+
+    <div id="start-screen">
+
+        <h2>Работа в Moodle</h2>
+
+        <div id="moodle-info" class="moodle-info">
+
+            <div class="info-row">
+                <span>👤 Студент</span>
+                <strong id="detected-student">
+                    Определение...
+                </strong>
+            </div>
+
+            <div class="info-row">
+                <span>📚 Предмет</span>
+                <strong id="detected-subject">
+                    Определение...
+                </strong>
+            </div>
+
+            <div class="info-row">
+                <span>📝 Работа</span>
+                <strong id="detected-work">
+                    Определение...
+                </strong>
+            </div>
+
+        </div>
+
+
+        <button
+                type="button"
+                class="primary-button"
+                id="start-moodle-button"
+        >
+            ▶ Начать работу
+        </button>
+
+
+        <button
+                type="button"
+                class="mode-button"
+                id="manual-button"
+        >
+            👨‍🎓 Ввести вручную
+        </button>
+
+    </div>
+
+
+    <div id="student-screen" class="hidden">
+
+        <h2>Работа для студента</h2>
+
+        <label for="student-name">
+            Фамилия студента
+        </label>
+
+        <input
+                type="text"
+                id="student-name"
+                placeholder="Например: Верниченко"
+                autocomplete="off"
+        >
+
+        <button
+                type="button"
+                class="primary-button"
+                id="start-button"
+        >
+            ▶ Начать работу
+        </button>
+
+        <button
+                type="button"
+                class="back-button"
+                id="back-button"
+        >
+            ← Назад
+        </button>
+
+    </div>
+
+
+    <div id="timer-screen" class="hidden">
+
+        <div class="working-for">
+            Работа для:
+            <strong id="current-student">—</strong>
+        </div>
+
+        <div class="timer">
+            00:00:00
+        </div>
+
+        <div class="timer-status">
+            ● Работа идёт
+        </div>
+
+        <button
+                type="button"
+                class="stop-button"
+                id="stop-button"
+        >
+            ■ Завершить работу
+        </button>
+
+    </div>
+
+
+    <div id="result-screen" class="hidden">
+
+        <div class="result-icon">
+            ✓
+        </div>
+
+        <h2>Работа завершена</h2>
+
+        <div class="result-info">
+
+            <div>
+                <span>Студент</span>
+                <strong id="result-student">—</strong>
+            </div>
+
+            <div>
+                <span>Время работы</span>
+                <strong id="result-time">—</strong>
+            </div>
+
+            <div>
+                <span>Минут</span>
+                <strong id="result-minutes">—</strong>
+            </div>
+
+        </div>
+
+        <button
+                type="button"
+                class="primary-button"
+                id="new-work-button"
+        >
+            + Новая работа
+        </button>
+
+    </div>
+
+</div>
+
+<script src="popup.js"></script>
+
+</body>
+</html>
