@@ -1,264 +1,171 @@
-console.log("StudyCash Timer: Moodle обнаружен");
+console.log("StudyCash Timer: content.js запущен");
 
 
-// ========================================
-// ПОЛУЧАЕМ ТЕКСТ СТРАНИЦЫ
-// ========================================
-
-function getPageText() {
-
-    return document.body
-        ? document.body.innerText
-        : "";
-}
-
-
-// ========================================
-// ОПРЕДЕЛЯЕМ СТУДЕНТА
-// ========================================
-
-function detectStudent() {
-
-    // Стандартный Moodle user menu
-    const userMenu =
-        document.querySelector(".usermenu");
-
-    if (userMenu) {
-
-        const text =
-            userMenu.innerText.trim();
-
-        if (text) {
-            return text
-                .split("\n")
-                .map(function (line) {
-                    return line.trim();
-                })
-                .filter(Boolean)[0];
-        }
-    }
-
-
-    // Дополнительный вариант Moodle
-    const userButton =
-        document.querySelector(".userbutton");
-
-    if (userButton) {
-
-        const text =
-            userButton.innerText.trim();
-
-        if (text) {
-            return text
-                .split("\n")
-                .map(function (line) {
-                    return line.trim();
-                })
-                .filter(Boolean)[0];
-        }
-    }
-
-
-    return "";
-}
-
-
-// ========================================
-// ОПРЕДЕЛЯЕМ ПРЕДМЕТ
-// ========================================
-
-function detectSubject() {
-
-    /*
-        На твоей странице название предмета
-        находится в главном заголовке:
-
-        Программирование робототехнических систем 1
-    */
-
-    const h1 =
-        document.querySelector("h1");
-
-    if (h1) {
-
-        const text =
-            h1.innerText.trim();
-
-        if (text) {
-            return text;
-        }
-    }
-
-
-    return "";
-}
-
-
-// ========================================
-// ОПРЕДЕЛЯЕМ ЛАБОРАТОРНУЮ
-// ========================================
-
-function detectWork() {
+function getMoodleData() {
 
     const pageText =
-        getPageText();
+        document.body
+            ? document.body.innerText
+            : "";
 
 
-    /*
-        Ищем конструкции:
+    // ========================================
+    // СТУДЕНТ
+    // ========================================
 
-        ЛР № 2
-        ЛР №2
-        Лабораторная № 2
-        Лабораторная работа № 2
-    */
+    let student = "";
 
-    const patterns = [
 
-        /ЛР\s*№\s*(\d+)/i,
-
-        /Лабораторн(?:ая|ой|ую)\s*(?:работа)?\s*№\s*(\d+)/i,
-
-        /Лабораторная\s+работа\s*№\s*(\d+)/i
+    const userElements = [
+        document.querySelector(".usermenu"),
+        document.querySelector(".userbutton"),
+        document.querySelector(".logininfo")
     ];
 
 
-    for (
-        let i = 0;
-        i < patterns.length;
-        i++
-    ) {
+    for (const element of userElements) {
 
-        const match =
-            pageText.match(patterns[i]);
+        if (!element) {
+            continue;
+        }
 
-        if (match) {
 
-            return {
-                type: "Лабораторная",
-                number: Number(match[1])
-            };
+        const text =
+            element.innerText
+                .trim()
+                .replace(/\s+/g, " ");
+
+
+        if (text) {
+
+            student = text;
+
+            break;
         }
     }
 
 
-    return {
-        type: "",
-        number: null
-    };
-}
+    // ========================================
+    // ПРЕДМЕТ
+    // ========================================
+
+    let subject = "";
 
 
-// ========================================
-// ПОЛУЧАЕМ ВСЮ ИНФОРМАЦИЮ
-// ========================================
-
-function detectMoodleData() {
-
-    const student =
-        detectStudent();
-
-    const subject =
-        detectSubject();
-
-    const work =
-        detectWork();
+    const headings =
+        Array.from(
+            document.querySelectorAll("h1, h2")
+        );
 
 
-    const data = {
+    for (const heading of headings) {
+
+        const text =
+            heading.innerText
+                .trim()
+                .replace(/\s+/g, " ");
+
+
+        if (
+            text &&
+            !/выполнение лр/i.test(text) &&
+            !/состояние ответа/i.test(text)
+        ) {
+
+            subject = text;
+
+            break;
+        }
+    }
+
+
+    // ========================================
+    // ЛАБОРАТОРНАЯ
+    // ========================================
+
+    let workType = "";
+    let workNumber = null;
+
+
+    const workMatch =
+        pageText.match(
+            /(?:ЛР|Лабораторная(?:\s+работа)?)\s*№\s*(\d+)/i
+        );
+
+
+    if (workMatch) {
+
+        workType = "Лабораторная";
+
+        workNumber =
+            Number(workMatch[1]);
+    }
+
+
+    // ========================================
+    // РЕЗУЛЬТАТ
+    // ========================================
+
+    const result = {
 
         student: student,
 
         subject: subject,
 
-        workType: work.type,
+        workType: workType,
 
-        workNumber: work.number,
+        workNumber: workNumber,
 
         url: window.location.href,
+
+        title: document.title,
 
         detectedAt: Date.now()
     };
 
 
     console.log(
-        "StudyCash Timer — найдено:",
-        data
+        "StudyCash Timer: данные Moodle:",
+        result
     );
 
 
-    return data;
+    return result;
 }
 
 
 // ========================================
-// СОХРАНЯЕМ В РАСШИРЕНИИ
+// ОТВЕЧАЕМ НА ЗАПРОС ОТ POPUP
 // ========================================
 
-function saveMoodleData() {
-
-    const data =
-        detectMoodleData();
-
-
-    chrome.storage.local.set(
-        {
-            moodleData: data
-        },
-        function () {
-
-            if (chrome.runtime.lastError) {
-
-                console.error(
-                    "StudyCash Timer:",
-                    chrome.runtime.lastError
-                );
-
-                return;
-            }
-
-
-            console.log(
-                "StudyCash Timer: данные сохранены"
-            );
-        }
-    );
-}
-
-
-// ========================================
-// ПЕРВИЧНОЕ ОПРЕДЕЛЕНИЕ
-// ========================================
-
-saveMoodleData();
-
-
-// ========================================
-// ЕСЛИ MOODLE ДИНАМИЧЕСКИ
-// МЕНЯЕТ СТРАНИЦУ
-// ========================================
-
-let lastUrl =
-    window.location.href;
-
-
-setInterval(
-    function () {
+chrome.runtime.onMessage.addListener(
+    function (
+        message,
+        sender,
+        sendResponse
+    ) {
 
         if (
-            window.location.href !==
-            lastUrl
+            message &&
+            message.action ===
+            "getMoodleData"
         ) {
 
-            lastUrl =
-                window.location.href;
+            const data =
+                getMoodleData();
 
-            setTimeout(
-                saveMoodleData,
-                1000
+
+            chrome.storage.local.set(
+                {
+                    moodleData: data
+                }
             );
+
+
+            sendResponse(data);
         }
 
-    },
-    1000
+
+        return true;
+    }
 );

@@ -1,26 +1,28 @@
 {
   "manifest_version": 3,
   "name": "StudyCash Timer",
-  "version": "1.1.0",
+  "version": "1.5.0",
   "description": "Автоматический учёт времени выполнения работ в Moodle",
+
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting"
   ],
+
   "host_permissions": [
+    "http://dl.donnu.ru/*",
     "https://dl.donnu.ru/*"
   ],
+
+  "host_permissions": [
+    "http://dl.donnu.ru/*",
+    "https://dl.donnu.ru/*",
+    "https://hftlrygmnrmofnmkvhjb.supabase.co/*"
+  ],
+
   "action": {
     "default_popup": "popup.html"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://dl.donnu.ru/*"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_idle"
-    }
-  ]
+  }
 }
