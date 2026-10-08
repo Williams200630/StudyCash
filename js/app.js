@@ -267,10 +267,9 @@ if (workForm) {
 
 
             const workNumber =
-                Number(
-                    document.getElementById("work-number")
-                        .value
-                );
+                document.getElementById("work-number")
+                    .value
+                    .trim();
 
 
             const hours =
