@@ -245,7 +245,7 @@ if (workForm) {
 
     workForm.addEventListener(
         "submit",
-        async function(event) {
+        async function (event) {
 
             event.preventDefault();
 
@@ -335,18 +335,26 @@ if (workForm) {
 
                 // Сохраняем работу в Supabase
 
-                await saveWorkToSupabase(newWork);
 
+                await saveWorkToSupabase({
+                    student: student,
+                    subject: subject,
+                    workType: workType,
+                    workNumber: workNumber,
+                    hours: hours,
+                    minutes: minutes,
+                    totalMinutes: hours * 60 + minutes,
+                    price: price
+                });
 
-                // Пока также сохраняем в localStorage,
-                // чтобы существующие страницы продолжали работать
+// Пока также сохраняем в localStorage,
+// чтобы существующие страницы продолжали работать
 
                 const works = getWorks();
 
                 works.push(newWork);
 
                 saveWorks(works);
-
 
                 alert(
                     `Работа добавлена!\n\n` +
@@ -357,9 +365,7 @@ if (workForm) {
                     `Стоимость: ${formatMoney(price)}`
                 );
 
-
                 window.location.href = "index.html";
-
 
             } catch (error) {
 
@@ -374,24 +380,6 @@ if (workForm) {
                 );
 
             }
-
-
-            // Сообщение
-
-            alert(
-                `Работа добавлена!\n\n` +
-                `${student}\n` +
-                `${subject}\n` +
-                `${workType} №${workNumber}\n\n` +
-                `Время: ${hours} ч ${minutes} мин\n` +
-                `Стоимость: ${formatMoney(price)}`
-            );
-
-
-            // Возвращаемся на главную
-
-            window.location.href =
-                "index.html";
         }
     );
 
@@ -2291,6 +2279,4 @@ if (studentWorksList) {
     // ПЕРВЫЙ ЗАПУСК
     // ========================================
 
-    renderStudentPage();
-
-}
+    renderStudentPage();}
