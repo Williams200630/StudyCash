@@ -2203,80 +2203,125 @@ if (studentWorksList) {
 
 
         // ========================================
-        // СПИСОК РАБОТ
-        // ========================================
+// СПИСОК РАБОТ
+// ========================================
 
         studentWorksList.innerHTML = "";
 
-
         if (!works || works.length === 0) {
-
             studentWorksList.innerHTML = `
-                <div class="no-students">
-                    <h3>Работ пока нет</h3>
-                    <p>
-                        Для этого студента ещё нет выполненных работ.
-                    </p>
-                </div>
-            `;
-
+        <div class="no-students">
+            <h3>Работ пока нет</h3>
+            <p>
+                Для этого студента ещё нет выполненных работ.
+            </p>
+        </div>
+    `;
         } else {
+            works.forEach(function (work) {
+                // Карточка работы
+                const workCard = document.createElement("div");
+                workCard.className = "work-card";
 
-            works.forEach(
-                function (work) {
+                // Информация о работе
+                workCard.innerHTML = `
+            <div class="work-card-header">
+                <strong>
+                    ${work.workType || work.work_type}
+                    №${work.workNumber || work.work_number}
+                </strong>
 
-                    const workCard =
-                        document.createElement("div");
+                <span>
+                    ${formatMoney(work.price)}
+                </span>
+            </div>
 
+            <div class="work-card-info">
+                <span>${work.subject}</span>
 
-                    workCard.className =
-                        "work-card";
+                <span>
+                    ${work.hours} ч ${work.minutes} мин
+                </span>
+            </div>
+        `;
 
+                // Кнопка удаления
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "🗑 Удалить работу";
 
-                    workCard.innerHTML = `
+                deleteButton.style.marginTop = "12px";
+                deleteButton.style.padding = "9px 14px";
+                deleteButton.style.border = "none";
+                deleteButton.style.borderRadius = "8px";
+                deleteButton.style.backgroundColor = "#7f1d1d";
+                deleteButton.style.color = "#ffffff";
+                deleteButton.style.cursor = "pointer";
 
-                        <div class="work-card-header">
+                // Удаление выбранной работы
+                deleteButton.addEventListener("click", async function () {
+                    const workName =
+                        `${work.workType || work.work_type} №${work.workNumber || work.work_number}`;
 
-                            <strong>
-                                ${work.workType || work.work_type}
-                                №${work.workNumber || work.work_number}
-                            </strong>
-
-                            <span>
-                                ${formatMoney(work.price)}
-                            </span>
-
-                        </div>
-
-                        <div class="work-card-info">
-
-                            <span>
-                                ${work.subject}
-                            </span>
-
-                            <span>
-                                ${work.hours} ч ${work.minutes} мин
-                            </span>
-
-                        </div>
-
-                    `;
-
-
-                    studentWorksList.appendChild(
-                        workCard
+                    const confirmed = confirm(
+                        `Удалить эту работу?\n\n` +
+                        `Предмет: ${work.subject}\n` +
+                        `Работа: ${workName}\n` +
+                        `Время: ${work.hours} ч ${work.minutes} мин\n` +
+                        `Стоимость: ${formatMoney(work.price)}\n\n` +
+                        `Это действие нельзя отменить.`
                     );
 
-                }
-            );
+                    if (!confirmed) {
+                        return;
+                    }
 
+                    deleteButton.disabled = true;
+                    deleteButton.textContent = "Удаление...";
+
+                    try {
+                        const { error } = await db
+                            .from("works")
+                            .delete()
+                            .eq("id", work.id);
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        alert("Работа успешно удалена.");
+
+                        // Повторно загружаем данные студента
+                        // и обновляем время, стоимость и долг.
+                        await renderStudentPage();
+
+                    } catch (error) {
+                        console.error(
+                            "Ошибка удаления работы:",
+                            error
+                        );
+
+                        alert(
+                            "Не удалось удалить работу.\n\n" +
+                            error.message
+                        );
+
+                        deleteButton.disabled = false;
+                        deleteButton.textContent = "🗑 Удалить работу";
+                    }
+                });
+
+                // Добавляем кнопку в карточку
+                workCard.appendChild(deleteButton);
+
+                // Добавляем карточку на страницу
+                studentWorksList.appendChild(workCard);
+            });
         }
-
-    }
 
 
     // ========================================
     // ПЕРВЫЙ ЗАПУСК
     // ========================================
 
-    renderStudentPage();}
+    renderStudentPage();}}
