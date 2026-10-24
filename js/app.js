@@ -1903,7 +1903,16 @@ const studentWorksList =
 
 if (studentWorksList) {
 
+    function showStudentLoadError(error) {
+        console.error("Ошибка загрузки страницы студента:", error);
+        studentWorksList.textContent =
+            "Не удалось загрузить данные студента. " +
+            (error.message || "Проверь подключение к интернету и обнови страницу.");
+    }
+
     async function renderStudentPage() {
+
+        studentWorksList.textContent = "Загрузка работ...";
 
         // Получаем имя студента из адреса
 
@@ -1919,6 +1928,8 @@ if (studentWorksList) {
         // Если имя не передано
 
         if (!studentName) {
+
+            showStudentLoadError(new Error("Не указано имя студента в ссылке."));
 
             console.error(
                 "Не указано имя студента"
@@ -1944,6 +1955,8 @@ if (studentWorksList) {
 
         if (studentError) {
 
+            showStudentLoadError(studentError);
+
             console.error(
                 "Ошибка загрузки студента:",
                 studentError
@@ -1954,6 +1967,8 @@ if (studentWorksList) {
 
 
         if (!students || students.length === 0) {
+
+            showStudentLoadError(new Error("Студент не найден."));
 
             console.error(
                 "Студент не найден:",
@@ -1988,6 +2003,8 @@ if (studentWorksList) {
 
 
         if (worksError) {
+
+            showStudentLoadError(worksError);
 
             console.error(
                 "Ошибка загрузки работ:",
@@ -2325,5 +2342,5 @@ if (studentWorksList) {
     // ПЕРВЫЙ ЗАПУСК
     // ====================================
 
-    renderStudentPage();
+    renderStudentPage().catch(showStudentLoadError);
 }
