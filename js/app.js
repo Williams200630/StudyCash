@@ -2280,7 +2280,7 @@ if (studentWorksList) {
                     deleteButton.textContent = "Удаление...";
 
                     try {
-                        const { error } = await db
+                        const {error} = await db
                             .from("works")
                             .delete()
                             .eq("id", work.id);
@@ -2319,9 +2319,10 @@ if (studentWorksList) {
             });
         }
 
+        // ========================================
+        // ПЕРВЫЙ ЗАПУСК
+        // ========================================
 
-    // ========================================
-    // ПЕРВЫЙ ЗАПУСК
-    // ========================================
-
-    renderStudentPage();}}
+        renderStudentPage();
+    }
+}
